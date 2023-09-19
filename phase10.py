@@ -182,9 +182,6 @@ class Card:
         elif s == 'S':
             self._suit = 'Spades'
             self._suit_value = 0x3
-        elif s == ' ': # Used for jokers
-            self._suit = None
-            self._suit_value = 0x4
         else:
             raise CardError('Invalid suit code \'%s\'' % s)
 
@@ -193,7 +190,7 @@ class Card:
 
         if r == 'A':
             self._rank = 'Ace'
-            self._point_value = 5
+            self._point_value = 25
             self._rank_value = 0x1
         elif r == '2':
             self._rank = 'Two'
@@ -241,15 +238,8 @@ class Card:
             self._rank_value = 0xc
         elif r == 'K':
             self._rank = 'King'
-            self._point_value = 25 
+            self._point_value = 10 
             self._rank_value = 0xd
-        elif r == 'X':
-            if s == ' ':
-                self._rank = 'Joker'
-                self._point_value = 15
-                self._rank_value = 0xe
-            else:
-                raise CardError('Cannot create suited jokers \'%s\'' % code)
         else:
              raise CardError('Invalid rank code %s', r)
 
@@ -285,12 +275,6 @@ def shuffle(items):
 
         return items
 
-suits = 'HCDS '
-ranks = 'A23456789TJQKX'
-suit_names = ['Hearts', 'Clubs', 'Diamonds', 'Spades', None]
-rank_names = ['Ace', 'Two', 'Three', 'Four', 'Five', \
-                'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', \
-                'Queen', 'King', 'Joker']
 
 class CardError (Exception):
     """
@@ -333,8 +317,8 @@ class Stack:
         if len(self._cards) == 0: 
             raise CardError('Cannot shuffle an empty Stack') 
         
-        self._cards = shuffle(self._cards)
-
+        self._cards = random.shuffle(self._cards)
+        
     def take_at(self, index):
         """Take the card at specific index, removing it from stack"""
         if index not in range(len(self._cards)):
@@ -581,7 +565,12 @@ class Stack:
         self._iter_index += 1
         return self._cards[self._iter_index -1]
         
-
+suits = 'HCDS '
+ranks = 'A23456789TJQKX'
+suit_names = ['Hearts', 'Clubs', 'Diamonds', 'Spades', None]
+rank_names = ['Ace', 'Two', 'Three', 'Four', 'Five', \
+                'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', \
+                'Queen', 'King', 'Joker']
 # Unit tests
 if __name__ == '__main__':
     import unittest
