@@ -96,7 +96,7 @@ class Card:
     def __str__(self):
           return self._rank + ' of ' + self._suit
         
-
+    
     def __repr__(self):
         return "Card(%s)" % repr(self._code)
 
@@ -113,29 +113,30 @@ class Card:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
         
 
-class Played_Deck:
-    """Represents the deck where all the played cards lay"""
+class Deck:
+    """R"""
     def __init__(self) -> None:
+        # creates the deck where each item is a card object
         self.deck = []
-        self.topCard = midDeck[-1]
-          pass
+        suits = 'HCDS'
+        ranks = 'A23456789TJQK'
+        for suit in suits:
+            for rank in ranks:
+                code = suit + rank
+                self.deck.append(Card(code))
 
-class Hidden_Deck:
-    """Represents the hidden deck"""
-    def __init__(self) -> None:
-        pass
-
-
-def FY_Shuffle(items):
+def FY_Shuffle(items: list):
     "implementation of the Fisher-Yates shuffle algorithm "
     if len(items) > 0:
-        r = range(len(items));
-        r.reverse()
-
+        r = reversed(range(len(items)))
         for i in r:
             j = random.randint(0, i)
             tmp = items[i]
             items[i] = items[j]
             items[j] = tmp
-
         return items
+    
+
+if __name__ == "__main__":
+    deck = Deck()
+    print(deck.deck[1]._code)
