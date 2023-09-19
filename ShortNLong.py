@@ -120,10 +120,11 @@ class Deck:
         self.deck = []
         suits = 'HCDS'
         ranks = 'A23456789TJQK'
-        for suit in suits:
-            for rank in ranks:
-                code = suit + rank
-                self.deck.append(Card(code))
+        for round in range(2):
+            for suit in suits:
+                for rank in ranks:
+                    code = suit + rank
+                    self.deck.append(Card(code))
 
         # shufflar kort in place
         FY_Shuffle(self.deck)
@@ -133,18 +134,26 @@ class Deck:
         self.layingCard = self.playedCardDeck[-1]
 
     
-    def _removeCard_(self, i:list) -> list:
+    def _removeCard_(self, i:list, deck: list) -> list:
         """Removes a card from the deck and returns the item"""
         popped = []
         for item in i:
-            popped.append(self.deck.pop(item))
+            popped.append(deck.pop(item))
             return popped
     
     def getTopCards(self, i):
         """gets the  top cards in the played cards deck"""
         return self.playedCardDeck[i:]
     
+    def init_new_round(self):
+        FY_Shuffle(self.deck)
+        # removes the top cards and assings it to the played deck
+        self.playedCardDeck = [(self._removeCard_([-1], self.deck))[0]]
+        self.layingCard = self.playedCardDeck[-1]
 
+
+
+# _______________________________________________________________________________________________
 
 class Player:
     """Handles all action related to a specific player"""
@@ -152,6 +161,10 @@ class Player:
 
         pass
 
+
+
+class Game():
+    """Handles all the internal logic of the game"""
         
         
 

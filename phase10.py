@@ -66,6 +66,13 @@ class Game:
         return "Game({'deck' : %s, 'players' : %s, 'discard' : %s, 'hands' : %s, 'playorder' : %s, 'turn' : %s})" \
                 % (repr(self._deck), repr(self._players), repr(self._discard), repr(self._hands), \
                         repr(self._playorder), repr(self._turn))
+
+
+
+
+
+
+                        
 class Turn:
     def __init__(self, player, sets, deck, discard):
         self._player = player
