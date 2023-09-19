@@ -114,7 +114,7 @@ class Card:
         
 
 class Deck:
-    """R"""
+    """Represents both the deck on the table"""
     def __init__(self) -> None:
         # creates the deck where each item is a card object
         self.deck = []
@@ -124,6 +124,14 @@ class Deck:
             for rank in ranks:
                 code = suit + rank
                 self.deck.append(Card(code))
+
+        # shufflar kort in place
+        FY_Shuffle(self.deck)
+
+        # creates played card deck and plays a starting card
+        self.played_cardDeck = []
+        s
+
 
 def FY_Shuffle(items: list):
     "implementation of the Fisher-Yates shuffle algorithm "
@@ -139,4 +147,4 @@ def FY_Shuffle(items: list):
 
 if __name__ == "__main__":
     deck = Deck()
-    print(deck.deck[1]._code)
+    print(deck.deck[0])
