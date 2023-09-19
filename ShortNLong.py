@@ -129,8 +129,33 @@ class Deck:
         FY_Shuffle(self.deck)
 
         # creates played card deck and plays a starting card
-        self.played_cardDeck = []
-        s
+        self.playedCardDeck = [self._removeCard_([-1])]
+        self.layingCard = self.playedCardDeck[-1]
+
+    
+    def _removeCard_(self, i:list) -> list:
+        """Removes a card from the deck and returns the item"""
+        popped = []
+        for item in i:
+            popped.append(self.deck.pop(item))
+            return popped
+    
+    def getTopCards(self, i):
+        """gets the  top cards in the played cards deck"""
+        return self.playedCardDeck[i:]
+    
+
+
+class Player:
+    """Handles all action related to a specific player"""
+    def __init__(self, playerID) -> None:
+
+        pass
+
+        
+        
+
+
 
 
 def FY_Shuffle(items: list):
