@@ -18,7 +18,7 @@ class Game:
             except KeyError:
                 # State does not have all of the keys,
                 # assume that the Game is empty
-                self._deck = Stack() 
+                self._deck = Stack()
                 self._discard = Stack()
                 self._hands = []
                 self._players = []
@@ -44,7 +44,7 @@ class Game:
 
         self._discard = Stack()
         self._discard += self._deck.draw()
-    
+
     @property
     def turn(self):
         player_index = self._playorder[self._turn % len(self._players)]
@@ -68,18 +68,13 @@ class Game:
                         repr(self._playorder), repr(self._turn))
 
 
-
-
-
-
-                        
 class Turn:
     def __init__(self, player, sets, deck, discard):
         self._player = player
         self._discard = discard
         self._deck = deck
         self._sets = sets
-    
+
     @property
     def player(self):
         return self._player
@@ -112,8 +107,9 @@ class Turn:
         Set %s
         Cards in deck %s
         Cards in discard %s""" % \
-                (str(self._player._id), str(self._player._hand), str(self._player._set), \
+               (str(self._player._id), str(self._player._hand), str(self._player._set), \
                 str(self._deck.card_count), str(self._discard.card_count))
+
 
 class Player:
     def __init__(self, pid, hand=None, pset=None):
@@ -124,11 +120,11 @@ class Player:
         self._id = pid
 
         if hand:
-            self._hand = hand 
+            self._hand = hand
         else:
             self._hand = Stack()
 
-        if pset: 
+        if pset:
             self._set = pset
         else:
             self._set = Stack()
@@ -136,26 +132,37 @@ class Player:
     def __repr__(self):
         return "Player(pid=%s, hand=%s, pset=%s)" % (repr(self._id), repr(self._hand), repr(self._set))
 
+
 class Phase:
     pass
+
 class Phase1 (Phase):
     pass
+
 class Phase2 (Phase):
     pass
+
 class Phase3 (Phase):
     pass
+
 class Phase4 (Phase):
     pass
+
 class Phase5 (Phase):
     pass
+
 class Phase6 (Phase):
     pass
+
 class Phase7 (Phase):
     pass
+
 class Phase8 (Phase):
     pass
+
 class Phase9 (Phase):
     pass
+
 class Phase10 (Phase):
     pass
 
@@ -165,15 +172,15 @@ class Card:
     def val(self):
         return self._point_value
 
-    def __init__(self, code): 
+    def __init__(self, code):
         """
-        Code is Suit letter (H,C,D,S) followed by rank (A,2,3,4,5,6,7,8,9,T,J,Q,K,X) 
+        Code is Suit letter (H,C,D,S) followed by rank (A,2,3,4,5,6,7,8,9,T,J,Q,K,X)
         where T is 10 and X is joker
         """
         if not isinstance(code, str):
             raise CardError('Cannot create Card without string code')
 
-        self._code = code    
+        self._code = code
 
         # Set suit
         s = code[0]
@@ -233,19 +240,19 @@ class Card:
             self._rank_value = 0x9
         elif r == 'T':
             self._rank = 'Ten'
-            self._point_value = 10 
+            self._point_value = 10
             self._rank_value = 0xa
         elif r == 'J':
             self._rank = 'Jack'
-            self._point_value = 10 
+            self._point_value = 10
             self._rank_value = 0xb
-        elif r == 'Q': 
+        elif r == 'Q':
             self._rank = 'Queen'
-            self._point_value = 10 
+            self._point_value = 10
             self._rank_value = 0xc
         elif r == 'K':
             self._rank = 'King'
-            self._point_value = 10 
+            self._point_value = 10
             self._rank_value = 0xd
         else:
              raise CardError('Invalid rank code %s', r)
@@ -254,24 +261,24 @@ class Card:
         if self._rank is not 'Joker':
             return self._rank + ' of ' + self._suit
         else:
-            return self._rank 
+            return self._rank
 
     def __repr__(self):
         return "Card(%s)" % repr(self._code)
 
     def __cmp__(self, other):
         if isinstance(other, Card):
-            return 4*(self._rank_value - other._rank_value) + self._suit_value - other._suit_value 
+            return 4*(self._rank_value - other._rank_value) + self._suit_value - other._suit_value
         elif isinstance(other, Stack):
             # There will be one True for each element of other, so the only way to get 0
             # is to subtract the card count - 1
             return sum(self == i for i in other) - other.card_count - 1
         else:
-            raise NotImplementedError('Cannot compare Card to unknown type %s' % other.__class__) 
+            raise NotImplementedError('Cannot compare Card to unknown type %s' % other.__class__)
 
 def shuffle(items):
     if len(items) > 0:
-        r = range(len(items));
+        r = range(len(items))
         r.reverse()
 
         for i in r:
@@ -281,7 +288,6 @@ def shuffle(items):
             items[j] = tmp
 
         return items
-
 
 class CardError (Exception):
     """
@@ -312,10 +318,13 @@ class Stack:
 
     def __getitem__(self, index):
         return self._cards[index]
+
     def __setitem__(self, key, value):
         self._cards[key] = value
+
     def __delitem__(self, key):
         del self._cards[key]
+
     def append(self, c):
         self._cards.append(c)
 
@@ -325,7 +334,7 @@ class Stack:
             raise CardError('Cannot shuffle an empty Stack') 
         
         self._cards = random.shuffle(self._cards)
-        
+
     def take_at(self, index):
         """Take the card at specific index, removing it from stack"""
         if index not in range(len(self._cards)):
@@ -350,7 +359,7 @@ class Stack:
             raise CardError('Cannot add an unhandled type to Stack')
 
         return self
-    
+
     def sort(self, by='both'):
         if self.card_count:
             if by == 'rank':
@@ -388,39 +397,33 @@ class Stack:
         runs = []
         skip = -1 
 
-        #from pudb import set_trace; set_trace()
-
         for i in range(len(cards)-1):
             if i <= skip:
                 continue
 
             run = [cards[i][1]]
             prev = cards[i][0]
-            
+
             for j in range(i+1, len(cards)):
                 if prev == cards[j][0]-1:
-                    #set_trace()
                     # This is a run. Append to run
                     run.append(cards[j][1])
                     prev = cards[j][0]
                     skip = j
                 else:
-                    #set_trace()
                     break
-            
+
             if len(run) >= 2:
                 runs.append(run)
 
-            #set_trace()
-        
         # Try to join found sequences using kings
         if len(kings) == 0 or len(runs) < 2:
-        	return runs
-        
+            return runs
+
         nk = len(kings)
         runs_with_wilds = []
 
-        for x,y in itertools.permutations(runs, 2):
+        for x, y in itertools.permutations(runs, 2):
             # Note the -1. If a card is missing, the difference will be 2, not 1
             req_kings = y[0][0]._rank_value - x[-1][0]._rank_value - 1
 
@@ -428,7 +431,7 @@ class Stack:
                 # We have enough kings to join the pair
                 tmp = []
                 tmp.extend(x)
-                tmp.append(req_kings*kings)
+                tmp.append(req_kings * kings)
                 tmp.extend(y)
                 runs_with_wilds.append(tmp)
 
@@ -436,14 +439,11 @@ class Stack:
             runs.append(runs_with_wilds) 
 
         return runs
-    
+
     def _issequence(list1, list2):
         """Function receives two lists of tuples of the form
         (rank, [cards of that rank]) and checks if they're a sequence
         It assumes that list1 and list2 are sequences"""
-
-#        list1.sort(key=lambda x: x[0])
-#        list2.sort(key=lambda x: x[0])
 
         if list1[-1][0] == list2[0][0]-1:
             # list1,list2 form a sequence
@@ -472,7 +472,7 @@ class Stack:
         # Break into sets
         ranks = []
         groups = []
-        for k,v in itertools.groupby(tmp, lambda x: x._rank_value):
+        for k, v in itertools.groupby(tmp, lambda x: x._rank_value):
             groups.append(list(v))
             ranks.append(k)
 
@@ -482,7 +482,7 @@ class Stack:
         pass
 
     def deal(self, cards, players = 3):
-        if len(self._cards) < cards*players: 
+        if len(self._cards) < cards * players: 
             raise CardError('Cannot deal that many cards from Stack') 
 
         hands = []
@@ -560,7 +560,6 @@ class Stack:
             else:
                 return False
 
-
     def __iter__(self):
         self._iter_index = 0 
         return self
@@ -570,8 +569,8 @@ class Stack:
             raise StopIteration
         
         self._iter_index += 1
-        return self._cards[self._iter_index -1]
-        
+        return self._cards[self._iter_index - 1]
+
 suits = 'HCDS '
 ranks = 'A23456789TJQKX'
 suit_names = ['Hearts', 'Clubs', 'Diamonds', 'Spades', None]
@@ -590,4 +589,3 @@ if __name__ == '__main__':
 
     unittest.TextTestRunner(verbosity=2).run( \
             unittest.TestSuite([card_suite, stack_suite, game_suite]))
-
