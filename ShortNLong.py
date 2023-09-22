@@ -112,58 +112,52 @@ class Card:
             return (self._rank_value, self._suit_value) == (other._rank_value, other._suit_value)
         else:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
-        
+
 
 class Deck:
     """Represents both the deck on the table, has the hidden deck in self.deck and playedcarddeck for mid deck"""
     def __init__(self) -> None:
+
         # creates the deck where each item is a card object
         self._create_deck_()
         # creates played card deck and plays a starting card
         self.init_new_round()
-        
 
     def _create_deck_(self) -> None:
         """Creates a deck and shuffles"""
         self.deck = []
         suits = 'HCDS'
         ranks = 'A23456789TJQK'
-        for round in range(2):
+        for i in range(2):
             for suit in suits:
                 for rank in ranks:
                     code = suit + rank
                     self.deck.append(Card(code))
 
-
-
-    def _removeCard_(self, i:list, deck: list) -> list:
+    def remove_card(self, i:list, deck: list) -> None:
         """Removes a card from the deck and returns the item"""
         popped = []
         for item in i:
             popped.append(deck.pop(item))
         return popped
-    
-    def getTopCards(self, i):
+
+    def get_top_cards(self, i):
         """gets the  top cards in the played cards deck"""
         return self.playedCardDeck[i:]
-    
+
     def hand_out_cards(self,playerAmount,cardAmount) -> list:
         """Removes cards from the deck and returns a list of lists with each players hand"""
         playerHands = []
         for player in playerAmount:
-            cardsToGive = self.deck[self._removeCard_(self.deck[:cardAmount])]
+            cardsToGive = self.remove_card(self.deck,[cardAmount])
             playerHands.append(cardsToGive)
         return playerHands
 
-        
-
     def init_new_round(self):
         random.shuffle(self.deck)
-        # removes the top cards and assings it to the played deck
-        self.playedCardDeck = [(self._removeCard_([-1], self.deck))[0]]
+        # removes the top cards and assigns it to the played deck
+        self.playedCardDeck = [(self.remove_card([-1], self.deck))[0]]
         self.layingCard = self.playedCardDeck[-1]
-
-
 
 # _______________________________________________________________________________________________
 
@@ -234,6 +228,7 @@ class Player:
                 return
         else:
             pass
+
     def add_a_card(self, cards_to_add: list):
         """Adds a card to the deck and checks for win conditions"""
         self.hand += cards_to_add
@@ -273,4 +268,4 @@ def FY_Shuffle(items: list):
     
 
 if __name__ == "__main__":
-    spelare = Player()
+    spelare = Player([1],)
