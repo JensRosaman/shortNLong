@@ -107,6 +107,7 @@ class Card:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
 
     def __eq__(self, other):
+        """Compares two diffrent instance cards"""
         if isinstance(other, Card):
             return (self._rank_value, self._suit_value) == (other._rank_value, other._suit_value)
         else:
@@ -114,9 +115,16 @@ class Card:
         
 
 class Deck:
-    """Represents both the deck on the table"""
+    """Represents both the deck on the table, has the hidden deck in self.deck and playedcarddeck for mid deck"""
     def __init__(self) -> None:
         # creates the deck where each item is a card object
+        self._create_deck_()
+        # creates played card deck and plays a starting card
+        self.init_new_round()
+        
+
+    def _create_deck_(self) -> None:
+        """Creates a deck and shuffles"""
         self.deck = []
         suits = 'HCDS'
         ranks = 'A23456789TJQK'
@@ -126,27 +134,31 @@ class Deck:
                     code = suit + rank
                     self.deck.append(Card(code))
 
-        # shufflar kort in place
-        FY_Shuffle(self.deck)
 
-        # creates played card deck and plays a starting card
-        self.playedCardDeck = [self._removeCard_([-1])]
-        self.layingCard = self.playedCardDeck[-1]
 
-    
     def _removeCard_(self, i:list, deck: list) -> list:
         """Removes a card from the deck and returns the item"""
         popped = []
         for item in i:
             popped.append(deck.pop(item))
-            return popped
+        return popped
     
     def getTopCards(self, i):
         """gets the  top cards in the played cards deck"""
         return self.playedCardDeck[i:]
     
+    def hand_out_cards(self,playerAmount,cardAmount) -> list:
+        """Removes cards from the deck and returns a list of lists with each players hand"""
+        playerHands = []
+        for player in playerAmount:
+            cardsToGive = self.deck[self._removeCard_(self.deck[:cardAmount])]
+            playerHands.append(cardsToGive)
+        return playerHands
+
+        
+
     def init_new_round(self):
-        FY_Shuffle(self.deck)
+        random.shuffle(self.deck)
         # removes the top cards and assings it to the played deck
         self.playedCardDeck = [(self._removeCard_([-1], self.deck))[0]]
         self.layingCard = self.playedCardDeck[-1]
@@ -158,7 +170,7 @@ class Deck:
 
 class Player:
     """Handles all action related to a specific player and their hand"""
-    def __init__(self, player_id, cards):
+    def __init__(self, player_id, cards:list):
         self.hand = cards
         self.id = player_id
         self.complete_hand = False
@@ -168,11 +180,11 @@ class Player:
 
     # -------------------------------------Win conditions ----------------------------------------------------------
 
-    def __3_of_a_kind__(self) -> int:
+    def __3_of_a_kind__(self) -> None:
         """Gives the amount of 3 of a kinds in the instances hand"""
         rank_counts = {}
         for card in self.hand:
-            rank = card["rank"]
+            rank = card._rank
             if rank in rank_counts:
                 rank_counts[rank] += 1
             else:
@@ -183,34 +195,67 @@ class Player:
         for count in rank_counts.values():
             if count >= 3:
                 set_count += 1
-        return set_count
+        self.set_count = set_count
 
-    def __has_run_of_four__(self):
+    def __run_of_four__(self) -> None:
+        """Returns the amount of runs of fours in hand"""
         # Create a set to store the unique ranks in the hand
-        unique_ranks = set(card["rank"] for card in self.hand)
+        unique_ranks = set(card._rank for card in self.hand)
         ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"]
 
         # Iterate through the ranks and check if there is a sequence of four consecutive ranks
         for rank in ranks:
             if all(rank in unique_ranks for rank in ranks[ranks.index(rank):ranks.index(rank) + 4]):
                 self.run_count += 1
+
     # --------------------------------------------------------------------------------------
 
     def __complete_hand__(self):
+        self.__3_of_a_kind__()
+        self.__run_of_four__()
         if self.round == 1:
-            print()
+            if self.set_count >= 3:
+                self.complete_hand = True
+                return
+            else:
+                self.complete_hand = False
+        
+        elif self.round == 2:
+            if self.set_count >= 1 and self.run_count >= 1:
+                self.complete_hand = True
+                return
+        elif self.round == 3:
+            if self.run_count >= 2:
+                self.complete_hand = True
+                return
+        elif self.round == 4:
+            if self.set_count >= 3:
+                self.complete_hand = True
+                return
         else:
-            return False
-
+            pass
     def add_a_card(self, cards_to_add: list):
+        """Adds a card to the deck and checks for win conditions"""
         self.hand += cards_to_add
         self.__complete_hand__()
 
 
-class Game():
+class Game:
     """Handles all the internal logic of the game"""
+    def __init__(self, playerIDS: list) -> None:
+        self.numOfPlayers = len(playerIDS)
+        self.playerIDs = playerIDS
+        self.deck = Deck()
+        self.players
+    def _hand_out_cards(self):
+        """Hands out cards to players"""
+        cardsToGive = self.deck.hand_out_cards(playerAmount=self.numOfPlayers, cardAmount=3)
+        for hand in cardsToGive:
+            pass
         
         
+    
+
 
 
 
@@ -228,5 +273,4 @@ def FY_Shuffle(items: list):
     
 
 if __name__ == "__main__":
-    deck = Deck()
-    print(deck.deck[0])
+    spelare = Player()
