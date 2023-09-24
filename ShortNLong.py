@@ -223,32 +223,34 @@ class Player:
             if all(rank in unique_ranks for rank in ranks[ranks.index(rank):ranks.index(rank) + 4]):
                 self.run_count += 1
 
-    def __complete_hand__(self):
+    def __complete_hand__(self, round:int ):
+        self.round = round
         self.__3_of_a_kind__()
         self.__run_of_four__()
         if self.round == 1:
             if self.set_count >= 3:
                 self.complete_hand = True
-                return
+                
             else:
                 self.complete_hand = False
         
         elif self.round == 2:
             if self.set_count >= 1 and self.run_count >= 1:
                 self.complete_hand = True
-                return
+                
         elif self.round == 3:
             if self.run_count >= 2:
                 self.complete_hand = True
-                return
+                
         elif self.round == 4:
             if self.set_count >= 3:
                 self.complete_hand = True
-                return
+                
         else:
             pass
+        return self.complete_hand
 
-    def add_a_card(self, cards_to_add: list):
+    def add_card(self, cards_to_add: list):
         """Adds a card to the deck and checks for win conditions"""
         self.hand += cards_to_add
         self.__complete_hand__()
@@ -259,6 +261,93 @@ class Player:
         for card in self.hand:
             score += card._point_value
 
+    def start_new_round(self, round, cards):
+        """Starts a new round by reseting all values"""
+        self.hand = cards
+        self.complete_hand = False
+        self.round = round
+        self.set_count = 0
+        self.run_count = 0 
+        self.turn = False
+
+# -------------------------------------------------------------------------------------------------------
+
+
+class Agent:
+    def __init__(self, agentID:int, isHuman: bool) -> None:
+        self.human = True
+        self.agentID = agentID
+        self.isHuman = isHuman
+
+    def __hash__(self) -> int:
+        return self.agentID
+    
+    def __repr__(self) -> str:
+        return str(self.agentID)
+    
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Agent):
+            return self.agentID == other.agentID
+        return False
+    def request_action(self, state:dict):
+        """Gets the state of the game and returns an answer to the game class"""
+        
+        agentAction = { # Agent action represents the agents action
+            "takeCard": None, # bool if taking card
+            "takeFromDiscard": None,
+            "indexToTakeFrom": None,
+
+        }
+        if self.isHuman: # Checks if it is human player and if input is expected
+            print(f"Current state is {state}")
+
+            if state["isCurrentPlayer"] and not state["takenCard"]: # Checks if its the agents turn and have not taken a card
+                avalibleActions = f"""
+                1. Take from discard ({state["discard"][-1]})
+                2. Take from regular deck
+                """
+                userAction = input(f"What do you want to do \n {avalibleActions}")
+                if userAction == "1":
+                    indexOfWanted = input("Vilket kort bakifrån?")
+                    agentAction["takeFromDiscard"] = True
+                    agentAction["indexToTakeFrom"] = indexOfWanted
+                    agentAction["takeCard"] = True
+                    return agentAction
+                
+            elif state["takenCard"] and state['isCurrentPlayer']: # if player has taken a card and its their turn
+                
+            elif not state['isCurrentPlayer']:
+                currentDiscard = state['discard']
+                userAction = input(f"Take card from discard? {currentDiscard}")
+
+
+            else:
+                raise Exception("Error state does not match current conditions and agent failed to take action")
+                
+        elif not self.isHuman:
+            print(f"Current state is {state}")
+
+            if state["isCurrentPlayer"] and not state["takenCard"]: # Checks if its the agents turn and have not taken a card
+                
+            elif state["takenCard"] and state['isCurrentPlayer']: # if player has taken a card and its their turn
+            
+            elif state['isCurrentPlayer']:
+
+            else:
+                avalibleActions = f"""
+                1. Take from discard ({state["discard"][-1]})
+                2. Take from regular deck
+                """
+                userAction = input(f"What do you want to do \n {avalibleActions}")
+
+                if userAction == "1":
+                    indexOfWanted = input("Which card")
+                    return {
+                        "index" : indexOfWanted
+                    }
+        
+
+# playerId är objekt för att repsentera den som ger instruktioner till spel modulen
 
 class Game:
     """Handles all the internal logic of the game"""
@@ -284,7 +373,7 @@ class Game:
     
         # laying out starting cards
         self.discardDeck.append(self.deck.remove_card(self.deck.deck[-1]))
-        print(f"Game started, current laying card is {self.deck.layingCard}. Gameplay order is {self._playOrder} \n {self.players}")
+        print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
 
         # start of gameplay loop
         gameLoop = True
@@ -293,11 +382,34 @@ class Game:
             # Loops through the players, two for loops so each player takes turns starting
             for i in self._playOrder:
                 self.round += 1 # next turn starting
-                for i in self._playOrder: # i is the player id of the current player
-                    self.currentPlayer = self.players[i] # indexs players after the id - gives the player object
+                for i in self._playOrder: # i is the agent obj of the current player
+                    agentOfCurrentPlayer = i
+                    self.currentPlayer = self.players[i] # indexs players after the id - gives the player object of the current player
+                    current_player_index = self._playOrder.index(self.currentPlayer)
+                    
 
+                    while True: # loops until no one picks from discard or the players whos turn it is picks a card
+                        # -------------------checks if anyone wants to pick from discard
+                        agentsRequests = {}
+                        for agent in self.players:
+                            state = self.get_current_state(playerId=agent,takenCard=False)
+                            useraction = agent.request_action(state)
+                            if useraction['takeCard']: # if the user wants to take the card
+                                agentsRequests[agent] = useraction
+                            
+                        if agentsRequests: # if an agent has requested to take from discard
+                            #for player in agentsRequests:
+                            # Can place for loop here to double check if they want to take with the penalty, now agent dont know the penalty
 
-                    # -------------------checks if anyone wants to pick from discard
+                            # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
+                            # ask chatgpt cuz idfk
+                            agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]
+                            
+                            # if it isnt playerTopPicks turn - give penalty and loop again
+                            if not agentOfCurrentPlayer == agentToPick:
+                                
+                        else: # No agent picks from discard - proceed to their turn
+                            break
 
 
                     # start of the turn of the current player - starts when picking up a card
@@ -325,6 +437,16 @@ class Game:
         else:
             return penaltyCards
     
+    def _give_penalty(self, positionInStack: int, playerToPenalize: Player):
+        """Gives the player object a penalty card
+            positionInStack - the index of the wanted card, 
+        """
+        penaltyCards = self._calculate_penalty(player=playerToPenalize, positionInStack=positionInStack)
+
+        # get list of cards as a penalty and remove them from the stack
+        
+        playerToPenalize.add_card()
+    
     def current_win_conditions(self):
         """Sets the current win conditions depending on the round"""
         winConditions = {"sets": None, "runs": None}
@@ -343,7 +465,7 @@ class Game:
         else:
             pass
         return winConditions
-    def get_current_state(self, playerId:int):
+    def get_current_state(self, playerId, takenCard: bool): # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         self.state = {
@@ -356,32 +478,14 @@ class Game:
             "hand": requestingPlayer.hand,
             "winner": None,
             "currentScore": requestingPlayer.get_score(),
+            "situation": takenCard,
+            "hasCompleteHand": requestingPlayer.__complete_hand__(self.round),
+            "runCount": requestingPlayer.run_count,
+            "setCount": requestingPlayer.set_count,
         }
         return self.state
     
     
-    
-class humanAgent:
-    def __init__(self) -> None:
-        self.human = True
-        pass
-
-
-
-
-
-def FY_Shuffle(items: list):
-    "implementation of the Fisher-Yates shuffle algorithm "
-    if len(items) > 0:
-        r = reversed(range(len(items)))
-        for i in r:
-            j = random.randint(0, i)
-            tmp = items[i]
-            items[i] = items[j]
-            items[j] = tmp
-        return items
-
-# playerId är objekt för att repsentera den som ger instruktioner till spel modulen
-
+   
 if __name__ == "__main__":
     spelare = Player([1],)
