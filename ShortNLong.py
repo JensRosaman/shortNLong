@@ -4,6 +4,13 @@ import itertools
 from flask import Flask
 
 
+
+
+
+### To do!
+# check over the remove card functions shit is wonky fr fr
+# expand upon the agent class and edit it to be in line with new gameplay loop
+
 class Card:
     """Represents a single card"""
     @property
@@ -302,11 +309,11 @@ class Agent:
             print(f"Current state is {state}")
 
             if state["isCurrentPlayer"] and not state["takenCard"]: # Checks if its the agents turn and have not taken a card
-                avalibleActions = f"""
+                availableActions = f"""
                 1. Take from discard ({state["discard"][-1]})
                 2. Take from regular deck
                 """
-                userAction = input(f"What do you want to do \n {avalibleActions}")
+                userAction = input(f"What do you want to do \n {availableActions}")
                 if userAction == "1":
                     indexOfWanted = input("Vilket kort bakifrån?")
                     agentAction["takeFromDiscard"] = True
@@ -334,11 +341,11 @@ class Agent:
             elif state['isCurrentPlayer']:
 
             else:
-                avalibleActions = f"""
+                availableActions = f"""
                 1. Take from discard ({state["discard"][-1]})
                 2. Take from regular deck
                 """
-                userAction = input(f"What do you want to do \n {avalibleActions}")
+                userAction = input(f"What do you want to do \n {availableActions}")
 
                 if userAction == "1":
                     indexOfWanted = input("Which card")
@@ -372,7 +379,7 @@ class Game:
         self._playOrder = list(self.players)
     
         # laying out starting cards
-        self.discardDeck.append(self.deck.remove_card(self.deck.deck[-1]))
+        self.discardDeck.append(self.deck.remove_card([self.deck.deck[-1])])
         print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
 
         # start of gameplay loop
