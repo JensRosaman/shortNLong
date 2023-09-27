@@ -129,6 +129,7 @@ class Deck:
 
         # creates the deck where each item is a card object
         self._create_deck_()
+        self.completeDeck = self.deck # saves for later
         # creates played card deck and plays a starting card
         self.init_new_round()
 
@@ -163,13 +164,12 @@ class Deck:
     def remove_card(self, cardsToRemove:list) -> None:
         """
         Removes a card from the deck and returns the item
-        deck - what deck to pop from
         i - list of items to remove
-        
         """
+        
         popped = []
         for item in cardsToRemove:
-            popped.append(self.deck.pop(item))
+            popped.append(self.deck.pop(self.deck.index(item)))
         return popped
 
     
@@ -379,7 +379,7 @@ class Game:
         self._playOrder = list(self.players)
     
         # laying out starting cards
-        self.discardDeck.append(self.deck.remove_card([self.deck.deck[-1])])
+        self.discardDeck.append(self.deck.remove_card([self.deck.deck[-1]]))
         print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
 
         # start of gameplay loop
@@ -413,8 +413,8 @@ class Game:
                             agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]
                             
                             # if it isnt playerTopPicks turn - give penalty and loop again
-                            if not agentOfCurrentPlayer == agentToPick:
-                                
+                            if not (agentOfCurrentPlayer == agentToPick):
+                                penaltyCards = self.
                         else: # No agent picks from discard - proceed to their turn
                             break
 
@@ -451,8 +451,8 @@ class Game:
         penaltyCards = self._calculate_penalty(player=playerToPenalize, positionInStack=positionInStack)
 
         # get list of cards as a penalty and remove them from the stack
-        
-        playerToPenalize.add_card()
+        self.deck.remove_card
+        playerToPenalize.add_card(penaltyCards)
     
     def current_win_conditions(self):
         """Sets the current win conditions depending on the round"""
@@ -472,6 +472,18 @@ class Game:
         else:
             pass
         return winConditions
+    
+    def calculate_points(self,agent= None,player= None):
+        """Calculates the points in hand held by the player instance"""
+        if agent is None and player is None:
+            raise Exception("No arguments given to calculate points, ")
+        elif agent is not None and player is None:
+            player = self.players[agent]
+        elif player is not None:
+            pass
+        
+        return player.get_score()
+            
     def get_current_state(self, playerId, takenCard: bool): # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
