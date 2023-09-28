@@ -368,7 +368,7 @@ class Game:
         self.round = 0
         self.currentPlayer = None
 
-    def start_game(self, playerIDS) -> list:
+    def start_game(self, playerIDS) -> bool:
         """Starts the gameplay loop"""
         self.numOfPlayers = len(playerIDS)
         self.playerIDs = playerIDS
@@ -451,7 +451,7 @@ class Game:
         penaltyCards = self._calculate_penalty(player=playerToPenalize, positionInStack=positionInStack)
 
         # get list of cards as a penalty and remove them from the stack
-        self.deck.remove_card
+        self.deck.remove_card()
         playerToPenalize.add_card(penaltyCards)
     
     def current_win_conditions(self):
