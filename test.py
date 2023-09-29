@@ -1,4 +1,4 @@
-f = None
+f = [2,8,9]
 
-if f is not None:
-    print("H")
+g = 1
+print(f.pop(-1))

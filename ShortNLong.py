@@ -161,22 +161,25 @@ class Deck:
         # Shuffle the deck
         random.shuffle(self.deck)
 
-    def remove_card(self, cardsToRemove:list) -> None:
+    def remove_card(self, cardsToRemove:list = None, top=False) -> None:
         """
         Removes a card from the deck and returns the item
-        i - list of items to remove
+        i - index to remove
         """
         
-        popped = []
-        for item in cardsToRemove:
-            popped.append(self.deck.pop(self.deck.index(item)))
-        return popped
+        if cardsToRemove is not None:
+            popped = []
+            for item in cardsToRemove:
+                popped.append(self.deck.pop(self.deck.index(item)))
+            return popped
+        elif top:
+            return self.deck.pop(-1)
 
     
     def hand_out_cards(self,playerAmount,cardAmount) -> list:
         """Removes cards from the deck and returns a list of lists with each players hand"""
         playerHands = []
-        for player in playerAmount:
+        for player in range(playerAmount):
             cardsToGive = self.remove_card(self.deck[:cardAmount])
             playerHands.append(cardsToGive)
         return playerHands
@@ -199,6 +202,7 @@ class Player:
         self.set_count = 0
         self.run_count = 0 
         self.turn = False
+        self.takenCard = False
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
 
@@ -259,6 +263,8 @@ class Player:
 
     def add_card(self, cards_to_add: list):
         """Adds a card to the deck and checks for win conditions"""
+        if not type(cards_to_add) == list:
+            cards_to_add = [cards_to_add]
         self.hand += cards_to_add
         self.__complete_hand__()
 
@@ -296,6 +302,26 @@ class Agent:
         if isinstance(other, Agent):
             return self.agentID == other.agentID
         return False
+    
+
+    def request_declare(self, state:dict) -> bool:
+        """Returns bool if the agent wants to declare their cards"""
+        ans = input(f"u wnna open your cards? y/n p{self.agentID}")
+        if ans == "y":
+            return True
+        else:
+            return False
+
+    def request_card2Play(self, state:dict) -> int:
+        "Asks for the index of the card to play -> index int of played card"
+        print(f"State: {state}")
+        ans = input("Vilket kort vill du lägga (skriv index)")
+        return int(ans)
+
+    def request_take_discard(self, state:dict) -> bool:
+        
+        
+
     def request_action(self, state:dict):
         """Gets the state of the game and returns an answer to the game class"""
         
@@ -322,24 +348,20 @@ class Agent:
                     return agentAction
                 
             elif state["takenCard"] and state['isCurrentPlayer']: # if player has taken a card and its their turn
-                
-            elif not state['isCurrentPlayer']:
-                currentDiscard = state['discard']
-                userAction = input(f"Take card from discard? {currentDiscard}")
-
+                pass
 
             else:
-                raise Exception("Error state does not match current conditions and agent failed to take action")
-                
+                raise Exception("Error state does not match current conditions and agent failed to take action")  
+            # ------------------------------------------------------------------------- 
         elif not self.isHuman:
             print(f"Current state is {state}")
 
             if state["isCurrentPlayer"] and not state["takenCard"]: # Checks if its the agents turn and have not taken a card
-                
+                pass
             elif state["takenCard"] and state['isCurrentPlayer']: # if player has taken a card and its their turn
-            
+                pass
             elif state['isCurrentPlayer']:
-
+                pass
             else:
                 availableActions = f"""
                 1. Take from discard ({state["discard"][-1]})
@@ -359,8 +381,8 @@ class Agent:
 class Game:
     """Handles all the internal logic of the game"""
     def __init__(self, playerIDS: list) -> None:
-        self.numOfPlayers = None
-        self.playerIDs = []
+        self.numOfPlayers = len(playerIDS)
+        self.playerIDs = playerIDS
         self.deck = Deck()
         self.players = {}
         self._playOrder = []
@@ -370,10 +392,7 @@ class Game:
 
     def start_game(self, playerIDS) -> bool:
         """Starts the gameplay loop"""
-        self.numOfPlayers = len(playerIDS)
-        self.playerIDs = playerIDS
-        self.deck = Deck()
-        
+     
         # assing value to players list and start first round
         self._hand_out_cards(6)
         self._playOrder = list(self.players)
@@ -392,6 +411,7 @@ class Game:
                 for i in self._playOrder: # i is the agent obj of the current player
                     agentOfCurrentPlayer = i
                     self.currentPlayer = self.players[i] # indexs players after the id - gives the player object of the current player
+                    self.currentPlayer.turn = True
                     current_player_index = self._playOrder.index(self.currentPlayer)
                     
 
@@ -414,13 +434,27 @@ class Game:
                             
                             # if it isnt playerTopPicks turn - give penalty and loop again
                             if not (agentOfCurrentPlayer == agentToPick):
-                                penaltyCards = self.
+                                # hands cards to the penalized player
+                                self._take_discard(self.players[agentToPick])
+                            elif agentOfCurrentPlayer == agentToPick:
+                                self.currentPlayer.add_card(self.discardDeck[-1])
+                                self.currentPlayer.takenCard = True
                         else: # No agent picks from discard - proceed to their turn
                             break
 
-
                     # start of the turn of the current player - starts when picking up a card
-                    self.get_current_state(i) # updates the current state for the current player
+                    if self.currentPlayer.takenCard:
+                        self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
+                    
+                    stateOfPlayer = self.get_current_state(i) # updates the current state for the current player
+                    
+                    # check if want to declare
+                    if agentOfCurrentPlayer.request_declare:
+                        pass
+                    # request what card to play
+                    cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
+
+                    
                     # cases that define each diffrent 
 
     def _hand_out_cards(self, cardAmount):
@@ -444,15 +478,12 @@ class Game:
         else:
             return penaltyCards
     
-    def _give_penalty(self, positionInStack: int, playerToPenalize: Player):
+    def _take_discard(self, playerToPenalize: Player, positionInStack = None):
         """Gives the player object a penalty card
             positionInStack - the index of the wanted card, 
         """
-        penaltyCards = self._calculate_penalty(player=playerToPenalize, positionInStack=positionInStack)
-
-        # get list of cards as a penalty and remove them from the stack
-        self.deck.remove_card()
-        playerToPenalize.add_card(penaltyCards)
+        penaltyCard = self.deck.remove_card([self.deck[-1]])
+        playerToPenalize.add_card([penaltyCard, self.discardDeck[-1]]) # tar översta kortet från högern och lägger till i handen
     
     def current_win_conditions(self):
         """Sets the current win conditions depending on the round"""
@@ -470,7 +501,7 @@ class Game:
         elif self.round == 4:
             winConditions["sets"] = 3
         else:
-            pass
+            raise Exception("No valid round inputed")
         return winConditions
     
     def calculate_points(self,agent= None,player= None):
@@ -501,10 +532,13 @@ class Game:
             "hasCompleteHand": requestingPlayer.__complete_hand__(self.round),
             "runCount": requestingPlayer.run_count,
             "setCount": requestingPlayer.set_count,
+            "takenCard": requestingPlayer.takenCard
         }
         return self.state
     
     
    
 if __name__ == "__main__":
-    spelare = Player([1],)
+    spel = Game([1])
+    spel._hand_out_cards(3)
+    print(spel.players[1].hand)
