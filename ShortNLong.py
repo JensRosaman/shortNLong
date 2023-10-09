@@ -266,7 +266,7 @@ class Player:
         if not type(cards_to_add) == list:
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
-        self.__complete_hand__()
+        self.__complete_hand__(self.round)
 
     def get_score(self):
         """Adds upp the total score of the players hand"""
@@ -286,11 +286,11 @@ class Player:
 # -------------------------------------------------------------------------------------------------------
 
 
-class Agent:
-    def __init__(self, agentID:int, isHuman: bool) -> None:
+class HumanAgent:
+    def __init__(self, agentID:int) -> None:
         self.human = True
         self.agentID = agentID
-        self.isHuman = isHuman
+        self.isHuman = True
 
     def __hash__(self) -> int:
         return self.agentID
@@ -319,8 +319,13 @@ class Agent:
         return int(ans)
 
     def request_take_discard(self, state:dict) -> bool:
+        """Gets state of the game and returns ans"""
         
-        
+        if self.isHuman:
+            print(f"Current state is {state}")
+            ans = input("Ta kortet från discard? any key for yes")
+            if ans:
+                return True
 
     def request_action(self, state:dict):
         """Gets the state of the game and returns an answer to the game class"""
@@ -329,7 +334,6 @@ class Agent:
             "takeCard": None, # bool if taking card
             "takeFromDiscard": None,
             "indexToTakeFrom": None,
-
         }
         if self.isHuman: # Checks if it is human player and if input is expected
             print(f"Current state is {state}")
@@ -346,12 +350,6 @@ class Agent:
                     agentAction["indexToTakeFrom"] = indexOfWanted
                     agentAction["takeCard"] = True
                     return agentAction
-                
-            elif state["takenCard"] and state['isCurrentPlayer']: # if player has taken a card and its their turn
-                pass
-
-            else:
-                raise Exception("Error state does not match current conditions and agent failed to take action")  
             # ------------------------------------------------------------------------- 
         elif not self.isHuman:
             print(f"Current state is {state}")
@@ -376,6 +374,55 @@ class Agent:
                     }
         
 
+
+
+
+
+
+
+
+class Agent:
+    def __init__(self, agentID:int) -> None:
+        self.human = True
+        self.agentID = agentID
+
+    def __hash__(self) -> int:
+        return self.agentID
+    
+    def __repr__(self) -> str:
+        return str(self.agentID)
+    
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Agent):
+            return self.agentID == other.agentID
+        return False
+    
+
+    def request_declare(self, state:dict) -> bool:
+        """Returns bool if the agent wants to declare their cards"""
+        pass
+
+    def request_card2Play(self, state:dict) -> int:
+        "Asks for the index of the card to play -> index int of played card"
+        pass        
+    def request_take_discard(self, state:dict) -> bool:
+        """Gets state of the game and returns ans"""
+        
+    def request_action(self, state:dict):
+        """Gets the state of the game and returns an answer to the game class"""
+        pass
+        
+
+
+
+
+
+
+
+
+
+
+
 # playerId är objekt för att repsentera den som ger instruktioner till spel modulen
 
 class Game:
@@ -390,72 +437,68 @@ class Game:
         self.round = 0
         self.currentPlayer = None
 
-    def start_game(self, playerIDS) -> bool:
+    def start_game(self) -> bool:
         """Starts the gameplay loop"""
-     
         # assing value to players list and start first round
         self._hand_out_cards(6)
-        self._playOrder = list(self.players)
     
         # laying out starting cards
         self.discardDeck.append(self.deck.remove_card([self.deck.deck[-1]]))
         print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
 
         # start of gameplay loop
+        self._playOrder = list(self.players)
         gameLoop = True
         while gameLoop:
-            
             # Loops through the players, two for loops so each player takes turns starting
             for i in self._playOrder:
                 self.round += 1 # next turn starting
-                for i in self._playOrder: # i is the agent obj of the current player
-                    agentOfCurrentPlayer = i
-                    self.currentPlayer = self.players[i] # indexs players after the id - gives the player object of the current player
-                    self.currentPlayer.turn = True
-                    current_player_index = self._playOrder.index(self.currentPlayer)
-                    
 
-                    while True: # loops until no one picks from discard or the players whos turn it is picks a card
-                        # -------------------checks if anyone wants to pick from discard
-                        agentsRequests = {}
-                        for agent in self.players:
-                            state = self.get_current_state(playerId=agent,takenCard=False)
-                            useraction = agent.request_action(state)
-                            if useraction['takeCard']: # if the user wants to take the card
-                                agentsRequests[agent] = useraction
-                            
-                        if agentsRequests: # if an agent has requested to take from discard
-                            #for player in agentsRequests:
-                            # Can place for loop here to double check if they want to take with the penalty, now agent dont know the penalty
+                # Gameplay loop for the diffrent rounds
+                notStopped = True
+                while notStopped: #
+                    for agentOfCurrentPlayer in self._playOrder: # i is the agent obj of the current player
+                        self.currentPlayer = self.players[i] # indexs players after the id - gives the player object of the current player
+                        self.currentPlayer.turn = True
+                        current_player_index = self._playOrder.index(agentOfCurrentPlayer)
+                        
+                        while True: # loops until no one picks from discard or the players whos turn it is picks a card
+                            # -------------------checks if anyone wants to pick from discard
+                            agentsRequests = {}
+                            for agent in self.players:
+                                state = self.get_current_state(playerId=agent,takenCard=False)
+                                useraction = agent.request_action(state)
+                                if useraction['takeCard']: # if the user wants to take the card
+                                    agentsRequests[agent] = useraction
+                                
+                            if agentsRequests: # if an agent has requested to take from discard
+                                # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
+                                # ask chatgpt cuz idfk
+                                agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]
+                                # if it isnt playerTopPicks turn - give penalty and loop again
+                                if not (agentOfCurrentPlayer == agentToPick):
+                                    # hands cards to the penalized player
+                                    self._take_discard(self.players[agentToPick])
+                                elif agentOfCurrentPlayer == agentToPick:
+                                    self.currentPlayer.add_card(self.discardDeck[-1])
+                                    self.currentPlayer.takenCard = True
+                            else: # No agent picks from discard - proceed to their turn
+                                break
 
-                            # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
-                            # ask chatgpt cuz idfk
-                            agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]
-                            
-                            # if it isnt playerTopPicks turn - give penalty and loop again
-                            if not (agentOfCurrentPlayer == agentToPick):
-                                # hands cards to the penalized player
-                                self._take_discard(self.players[agentToPick])
-                            elif agentOfCurrentPlayer == agentToPick:
-                                self.currentPlayer.add_card(self.discardDeck[-1])
-                                self.currentPlayer.takenCard = True
-                        else: # No agent picks from discard - proceed to their turn
-                            break
+                        # start of the turn of the current player - starts when picking up a card
+                        if self.currentPlayer.takenCard:
+                            self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
+                        
+                        stateOfPlayer = self.get_current_state(i) # updates the current state for the current player
+                        
+                        # check if want to declare
+                        if agentOfCurrentPlayer.request_declare():
+                            pass
+                        # request what card to play
+                        cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
 
-                    # start of the turn of the current player - starts when picking up a card
-                    if self.currentPlayer.takenCard:
-                        self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
-                    
-                    stateOfPlayer = self.get_current_state(i) # updates the current state for the current player
-                    
-                    # check if want to declare
-                    if agentOfCurrentPlayer.request_declare:
-                        pass
-                    # request what card to play
-                    cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
-
-                    
-                    # cases that define each diffrent 
+                        
+                        # cases that define each diffrent 
 
     def _hand_out_cards(self, cardAmount):
         """Hands out cards to players and creates a playerlist, reset deck!!!"""
@@ -537,8 +580,9 @@ class Game:
         return self.state
     
     
-   
+
 if __name__ == "__main__":
-    spel = Game([1])
-    spel._hand_out_cards(3)
+    bob = Agent(1,True)
+    spel = Game([bob])
+    spel.start_game()
     print(spel.players[1].hand)

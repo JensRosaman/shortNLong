@@ -1,4 +1,5 @@
-f = [2,8,9]
+import pettingzoo as pz
+from ShortNLong import random, copy
+
 
 g = 1
-print(f.pop(-1))
