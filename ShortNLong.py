@@ -203,6 +203,7 @@ class Player:
         self.run_count = 0 
         self.turn = False
         self.takenCard = False
+        self.declared = {} # dict of all the declared cards
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
 
@@ -219,20 +220,33 @@ class Player:
         # Check if there are at least two ranks with three cards each
         set_count = 0
         for count in rank_counts.values():
-            if count >= 3:
+            if count >= 4:
                 set_count += 1
         self.set_count = set_count
 
     def __run_of_four__(self) -> None:
         """Returns the amount of runs of fours in hand"""
-        # Create a set to store the unique ranks in the hand
-        unique_ranks = set(card._rank for card in self.hand)
-        ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "Jack", "Queen", "King", "Ace"]
+        # Get a sorted list of unique rank values
+        unique_ranks = sorted(set(card._rank_value for card in self.hand))
 
-        # Iterate through the ranks and check if there is a sequence of four consecutive ranks
-        for rank in ranks:
-            if all(rank in unique_ranks for rank in ranks[ranks.index(rank):ranks.index(rank) + 4]):
-                self.run_count += 1
+        # Initialize counters
+        run_count = 0
+        consecutive_count = 1
+        runs = []
+        # Check for runs
+        for i in range(1, len(unique_ranks)):
+            if unique_ranks[i] == unique_ranks[i - 1] + 1:
+                consecutive_count += 1
+                if consecutive_count == 4:
+                    run_count += 1
+                    # Store the run as a list of card ranks
+                    run = [unique_ranks[i - 3], unique_ranks[i - 2], unique_ranks[i - 1], unique_ranks[i]]
+                    runs.append(run)
+            else:
+                consecutive_count = 1
+        self.run_count = run_count
+        return runs , run_count
+
 
     def __complete_hand__(self, round:int ):
         self.round = round
@@ -273,6 +287,12 @@ class Player:
         score = 0
         for card in self.hand:
             score += card._point_value
+        return score
+    
+    def declare_hand(self):
+        """Declares the hand and removes the card"""
+        
+
 
     def start_new_round(self, round, cards):
         """Starts a new round by reseting all values"""
@@ -282,6 +302,8 @@ class Player:
         self.set_count = 0
         self.run_count = 0 
         self.turn = False
+    
+    
 
 # -------------------------------------------------------------------------------------------------------
 
@@ -374,13 +396,6 @@ class HumanAgent:
                     }
         
 
-
-
-
-
-
-
-
 class Agent:
     def __init__(self, agentID:int) -> None:
         self.human = True
@@ -453,7 +468,6 @@ class Game:
             # Loops through the players, two for loops so each player takes turns starting
             for i in self._playOrder:
                 self.round += 1 # next turn starting
-
                 # Gameplay loop for the diffrent rounds
                 notStopped = True
                 while notStopped: #
@@ -466,9 +480,9 @@ class Game:
                             # -------------------checks if anyone wants to pick from discard
                             agentsRequests = {}
                             for agent in self.players:
-                                state = self.get_current_state(playerId=agent,takenCard=False)
-                                useraction = agent.request_action(state)
-                                if useraction['takeCard']: # if the user wants to take the card
+                                state = self.get_current_state(playerId=agent)
+                                useraction = agent.request_take_discard(state)
+                                if useraction: # if the user wants to take the card
                                     agentsRequests[agent] = useraction
                                 
                             if agentsRequests: # if an agent has requested to take from discard
@@ -486,18 +500,18 @@ class Game:
                                 break
 
                         # start of the turn of the current player - starts when picking up a card
-                        if self.currentPlayer.takenCard:
+                        if not self.currentPlayer.takenCard:
                             self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
-                        
+                            self.currentPlayer.takenCard = True
                         stateOfPlayer = self.get_current_state(i) # updates the current state for the current player
                         
                         # check if want to declare
-                        if agentOfCurrentPlayer.request_declare():
+                        if agentOfCurrentPlayer.request_declare(stateOfPlayer):
+                            
                             pass
-                        # request what card to play
+                        # request what card to play n play it
                         cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
-
-                        
+                        self.discardDeck.append(cardToPlay)
                         # cases that define each diffrent 
 
     def _hand_out_cards(self, cardAmount):
@@ -525,7 +539,7 @@ class Game:
         """Gives the player object a penalty card
             positionInStack - the index of the wanted card, 
         """
-        penaltyCard = self.deck.remove_card([self.deck[-1]])
+        penaltyCard = self.deck.remove_card(top=True)
         playerToPenalize.add_card([penaltyCard, self.discardDeck[-1]]) # tar översta kortet från högern och lägger till i handen
     
     def current_win_conditions(self):
@@ -558,7 +572,7 @@ class Game:
         
         return player.get_score()
             
-    def get_current_state(self, playerId, takenCard: bool): # taken card represents if the player has taken a card yet at the beginging of a turn
+    def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         self.state = {
@@ -571,7 +585,7 @@ class Game:
             "hand": requestingPlayer.hand,
             "winner": None,
             "currentScore": requestingPlayer.get_score(),
-            "situation": takenCard,
+            "situation": requestingPlayer.takenCard,
             "hasCompleteHand": requestingPlayer.__complete_hand__(self.round),
             "runCount": requestingPlayer.run_count,
             "setCount": requestingPlayer.set_count,
@@ -582,7 +596,7 @@ class Game:
     
 
 if __name__ == "__main__":
-    bob = Agent(1,True)
+    bob = HumanAgent(1)
     spel = Game([bob])
-    spel.start_game()
-    print(spel.players[1].hand)
+    spel._hand_out_cards(20)
+    print(spel.players[bob].__run_of_four__())
