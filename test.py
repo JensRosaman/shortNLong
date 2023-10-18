@@ -1,5 +1,3 @@
-import pettingzoo as pz
-from ShortNLong import random, copy
-
-
-g = 1
+from itertools import  chain
+lista = [[1, 2, 3], [4, 5], [6, 7, 8]]
+print(*lista)

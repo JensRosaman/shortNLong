@@ -1,15 +1,11 @@
 import random
-import copy
 import itertools
-from flask import Flask
 
 
 
 
 
-### To do!
-# check over the remove card functions shit is wonky fr fr
-# expand upon the agent class and edit it to be in line with new gameplay loop
+
 
 class Card:
     """Represents a single card"""
@@ -161,7 +157,7 @@ class Deck:
         # Shuffle the deck
         random.shuffle(self.deck)
 
-    def remove_card(self, cardsToRemove:list = None, top=False) -> None:
+    def remove_card(self, cardsToRemove:list = None, top=False) -> list[Card]:
         """
         Removes a card from the deck and returns the item
         i - index to remove
@@ -207,25 +203,39 @@ class Player:
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
 
-    def __3_of_a_kind__(self) -> None:
+    def __3_of_a_kind__(self,getSets=False, getCount=False) -> None:
         """Gives the amount of 3 of a kinds in the instances hand"""
         rank_counts = {}
+        cards_by_rank = {}  # A dictionary to store cards for each rank
+
         for card in self.hand:
             rank = card._rank
             if rank in rank_counts:
                 rank_counts[rank] += 1
             else:
                 rank_counts[rank] = 1
+                cards_by_rank[rank] = [card]
+            cards_by_rank[rank].append(card)
 
         # Check if there are at least two ranks with three cards each
         set_count = 0
         sets = []
-        for cards in rank_counts.values():
-            if cards >= 3:
+        for rank, cards in cards_by_rank.items():
+            if len(cards) >= 3:
                 set_count += 1
                 sets.append(cards)
+
         self.set_count = set_count
-        return sets
+        self.complete_sets = sets
+
+        if getSets and getCount:
+            return sets, set_count
+        elif getSets:
+            return sets
+        elif getCount:
+            return set_count
+        else:
+            return
 
 
     def __run_of_four__(self) -> None:
@@ -445,7 +455,7 @@ class Game:
         self.round = 0
         self.currentPlayer = None
 
-    def start_game(self) -> bool:
+    def start_game(self):
         """Starts the gameplay loop"""
         # assing value to players list and start first round
         self._hand_out_cards(6)
@@ -482,7 +492,7 @@ class Game:
                                 # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
                                 # ask chatgpt cuz idfk
                                 agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]
-                                # if it isnt playerTopPicks turn - give penalty and loop again
+                                # if it isn't playerTopPicks turn - give penalty and loop again
                                 if not (agentOfCurrentPlayer == agentToPick):
                                     # hands cards to the penalized player
                                     self._take_discard(self.players[agentToPick])
@@ -568,6 +578,7 @@ class Game:
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
+
         self.state = {
             "discard": self.discardDeck,
             "round": self.round,
@@ -582,7 +593,9 @@ class Game:
             "hasCompleteHand": requestingPlayer.__complete_hand__(self.round),
             "runCount": requestingPlayer.run_count,
             "setCount": requestingPlayer.set_count,
-            "takenCard": requestingPlayer.takenCard
+            "takenCard": requestingPlayer.takenCard,
+            "completeSets": requestingPlayer.complete_sets,
+            "completeRuns": requestingPlayer.complete_runs,
         }
         return self.state
     
@@ -592,4 +605,4 @@ if __name__ == "__main__":
     bob = HumanAgent(1)
     spel = Game([bob])
     spel._hand_out_cards(20)
-    print(spel.players[bob].__3_of_a_kind__(), spel.players[bob].hand)
+    print(spel.players[bob].__run_of_four__(), spel.players[bob].hand)
