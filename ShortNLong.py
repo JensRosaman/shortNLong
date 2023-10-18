@@ -219,10 +219,14 @@ class Player:
 
         # Check if there are at least two ranks with three cards each
         set_count = 0
-        for count in rank_counts.values():
-            if count >= 4:
+        sets = []
+        for cards in rank_counts.values():
+            if cards >= 3:
                 set_count += 1
+                sets.append(cards)
         self.set_count = set_count
+        return sets
+
 
     def __run_of_four__(self) -> None:
         """Returns the amount of runs of fours in hand"""
@@ -245,7 +249,7 @@ class Player:
             else:
                 consecutive_count = 1
         self.run_count = run_count
-        return runs , run_count
+        return runs
 
 
     def __complete_hand__(self, round:int ):
@@ -427,17 +431,6 @@ class Agent:
         """Gets the state of the game and returns an answer to the game class"""
         pass
         
-
-
-
-
-
-
-
-
-
-
-
 # playerId är objekt för att repsentera den som ger instruktioner till spel modulen
 
 class Game:
@@ -470,7 +463,7 @@ class Game:
                 self.round += 1 # next turn starting
                 # Gameplay loop for the diffrent rounds
                 notStopped = True
-                while notStopped: #
+                while notStopped: 
                     for agentOfCurrentPlayer in self._playOrder: # i is the agent obj of the current player
                         self.currentPlayer = self.players[i] # indexs players after the id - gives the player object of the current player
                         self.currentPlayer.turn = True
@@ -599,4 +592,4 @@ if __name__ == "__main__":
     bob = HumanAgent(1)
     spel = Game([bob])
     spel._hand_out_cards(20)
-    print(spel.players[bob].__run_of_four__())
+    print(spel.players[bob].__3_of_a_kind__(), spel.players[bob].hand)
