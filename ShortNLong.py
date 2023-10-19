@@ -425,7 +425,6 @@ class Agent:
         if isinstance(other, Agent):
             return self.agentID == other.agentID
         return False
-    
 
     def request_declare(self, state:dict) -> bool:
         """Returns bool if the agent wants to declare their cards"""
