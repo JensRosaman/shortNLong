@@ -306,6 +306,7 @@ class Player:
     def declare_hand(self):
         """Declares the hand and removes the card"""
         
+        
 
 
     def start_new_round(self, round, cards):
