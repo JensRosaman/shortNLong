@@ -1,12 +1,6 @@
 import random
 import itertools
 
-
-
-
-
-
-
 class Card:
     """Represents a single card"""
     @property
@@ -100,7 +94,6 @@ class Card:
 
     def __str__(self):
           return self._rank + ' of ' + self._suit
-        
     
     def __repr__(self):
         return "Card(%s)" % repr(self._code)
@@ -118,6 +111,8 @@ class Card:
         else:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
 
+    def __hash__(self) -> str:
+        return self._point_value
 
 class Deck:
     """Represents the deck on the table  """
@@ -153,7 +148,7 @@ class Deck:
         
         # Duplicate the cards and store them in the deck
         self.deck = [Card(code) for code in all_cards * 2]
-        
+
         # Shuffle the deck
         random.shuffle(self.deck)
 
@@ -241,21 +236,21 @@ class Player:
     def __run_of_four__(self) -> None:
         """Returns the amount of runs of fours in hand"""
         # Get a sorted list of unique rank values
-        unique_ranks = sorted(set(card._rank_value for card in self.hand))
-
+        unique_ranks = sorted(set((card, card._rank_value) for card in self.hand))
+        
         # Initialize counters
         run_count = 0
         consecutive_count = 1
         runs = []
         # Check for runs
-        for i in range(1, len(unique_ranks)):
+        for card, i in enumerate(1, len(unique_ranks)):
             if unique_ranks[i] == unique_ranks[i - 1] + 1:
                 consecutive_count += 1
                 if consecutive_count == 4:
                     run_count += 1
                     # Store the run as a list of card ranks
                     run = [unique_ranks[i - 3], unique_ranks[i - 2], unique_ranks[i - 1], unique_ranks[i]]
-                    runs.append(run)
+                    runs.append(card)
             else:
                 consecutive_count = 1
         self.run_count = run_count
@@ -306,8 +301,6 @@ class Player:
     def declare_hand(self):
         """Declares the hand and removes the card"""
         
-        
-
 
     def start_new_round(self, round, cards):
         """Starts a new round by reseting all values"""
