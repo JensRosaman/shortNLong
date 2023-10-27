@@ -1,5 +1,6 @@
 import random
 import itertools
+from typing import List
 
 class Card:
     """Represents a single card"""
@@ -233,28 +234,28 @@ class Player:
             return
 
 
-    def __run_of_four__(self) -> None:
-        """Returns the amount of runs of fours in hand"""
+    def __run_of_four__(self) -> (int, List[List[Card]]):
+        """Returns the amount of runs of fours in hand along with sorted runs"""
         # Get a sorted list of unique rank values
-        unique_ranks = sorted(set((card, card._rank_value) for card in self.hand))
-        
-        # Initialize counters
+        unique_ranks = sorted(set(card._rank_value for card in self.hand))
+
+        # Initialize counters and runs list
         run_count = 0
         consecutive_count = 1
         runs = []
-        # Check for runs
-        for card, i in enumerate(1, len(unique_ranks)):
+
+        for i in range(1, len(unique_ranks)):
             if unique_ranks[i] == unique_ranks[i - 1] + 1:
                 consecutive_count += 1
                 if consecutive_count == 4:
                     run_count += 1
-                    # Store the run as a list of card ranks
-                    run = [unique_ranks[i - 3], unique_ranks[i - 2], unique_ranks[i - 1], unique_ranks[i]]
-                    runs.append(card)
+                    # Store the run as a list of card instances
+                    run = [card for card in self.hand if card._rank_value in (unique_ranks[i - 3], unique_ranks[i - 2], unique_ranks[i - 1], unique_ranks[i])]
+                    runs.append(run)
             else:
                 consecutive_count = 1
-        self.run_count = run_count
-        return runs
+
+        return run_count, runs
 
 
     def __complete_hand__(self, round:int ):
@@ -597,5 +598,7 @@ class Game:
 if __name__ == "__main__":
     bob = HumanAgent(1)
     spel = Game([bob])
-    spel._hand_out_cards(20)
-    print(spel.players[bob].__run_of_four__(), spel.players[bob].hand)
+    spel._hand_out_cards(50)
+    print(spel.players[bob].__run_of_four__())
+
+
