@@ -195,7 +195,8 @@ class Player:
         self.run_count = 0 
         self.turn = False
         self.takenCard = False
-        self.declared = {} # dict of all the declared cards
+        self.declared = {"runs": [], "sets": []} # dict of all the declared cards
+        self.runs = []
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
 
@@ -236,26 +237,55 @@ class Player:
 
     def __run_of_four__(self) -> (int, List[List[Card]]):
         """Returns the amount of runs of fours in hand along with sorted runs"""
-        # Get a sorted list of unique rank values
-        unique_ranks = sorted(set(card._rank_value for card in self.hand))
 
-        # Initialize counters and runs list
+        # sorting each card in hand by their suit
+        suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
+        sorted_hand = []
+        for suit in suits:
+            suit_list = []
+            for card in self.hand:
+                if suit == card._suit:
+                    suit_list.append(card)
+            if suit_list:
+                sorted_hand.append(suit_list)
+
         run_count = 0
         consecutive_count = 1
         runs = []
 
-        for i in range(1, len(unique_ranks)):
-            if unique_ranks[i] == unique_ranks[i - 1] + 1:
-                consecutive_count += 1
-                if consecutive_count == 4:
-                    run_count += 1
-                    # Store the run as a list of card instances
-                    run = [card for card in self.hand if card._rank_value in (unique_ranks[i - 3], unique_ranks[i - 2], unique_ranks[i - 1], unique_ranks[i])]
-                    runs.append(run)
-            else:
-                consecutive_count = 1
 
-        return run_count, runs
+        # skips the suits where they are not long enough to make a run
+        for suit_list in sorted_hand:
+            if len(suit_list) <= 0:
+                continue
+            else:
+                suit_list = sorted(suit_list, key=lambda card: (card._rank_value, card._suit_value))
+                for i in range(1, len(suit_list)):
+                    # Check if the current card forms a run with the previous card
+                    if (
+                        (suit_list[i]._rank_value == suit_list[i - 1]._rank_value + 1) or #om i värde är en mer än förgående
+                        (suit_list[i]._rank_value == 2 and suit_list[i - 1]._rank_value == 1) 
+                    ) or (
+                        suit_list[i]._rank_value == 13 and suit_list[0]._rank_value == 1
+                    ):
+                        if suit_list[i]._rank_value == 13 and suit_list[0]._rank_value == 1:
+                            consecutive_count += 2
+                        else:
+                            consecutive_count += 1
+                        if consecutive_count == 4:
+                            run_count += 1
+                            # Store the run as a list of card instances
+                            run = [suit_list[i - 3], suit_list[i - 2], suit_list[i - 1], suit_list[i]]
+                            runs.append(run)
+                
+                    else:
+                        consecutive_count = 1
+
+        self.run_count = len(runs)
+        self.runs = runs
+        return runs
+
+
 
 
     def __complete_hand__(self, round:int ):
@@ -301,6 +331,54 @@ class Player:
     
     def declare_hand(self):
         """Declares the hand and removes the card"""
+        # Get the affected cards 
+        runs = self.__run_of_four__()
+        sets = self.__3_of_a_kind__()
+        if self.round == 1:
+            # two 3's
+            
+            for i in range(2):
+                self.declared["sets"].append(sets[i])
+                for card in sets[i]:
+                    self.hand.remove(card)
+        elif self.round == 2:
+            # 3 n run
+
+            self.declared["runs"].append(runs[0])
+            for card in runs[0]:
+                self.hand.remove(card)
+
+            self.declared["sets"].append(sets[0])
+            for card in sets[0]:
+                self.hand.remove(card)
+
+        elif self.round == 3:
+            # two runs
+
+            for i in range(2):
+                self.declared["runs"].append(runs[i])
+                for card in runs[i]:
+                    self.hand.remove(card)
+            
+           
+        elif self.round == 4:
+            # 3 st 3
+            for i in range(3):
+                self.declared["sets"].append(sets[i])
+                for card in sets[i]:
+                    self.hand.remove(card)
+
+    def valid_in_declared_run(self,card:Card) -> bool:
+        """Checks if the given Card is valid to add in a declared run"""
+        for run in self.declared["runs"]:
+            if (
+                ((card._rank_value == run[-1]._rank_value + 1) and run[-1]._rank_value != 1) or
+                (card._rank_value == run[0]._rank_value - 1)):
+
+                return True
+        else:
+            return False
+       
         
 
     def start_new_round(self, round, cards):
@@ -448,6 +526,8 @@ class Game:
         self.discardDeck = []
         self.round = 0
         self.currentPlayer = None
+        self.declaredCards = {}
+        
 
     def start_game(self):
         """Starts the gameplay loop"""
@@ -497,6 +577,8 @@ class Game:
                                 break
 
                         # start of the turn of the current player - starts when picking up a card
+
+
                         if not self.currentPlayer.takenCard:
                             self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
                             self.currentPlayer.takenCard = True
@@ -504,8 +586,10 @@ class Game:
                         
                         # check if want to declare
                         if agentOfCurrentPlayer.request_declare(stateOfPlayer):
+                            self.currentPlayer.declare_hand()
+                            self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared_
+
                             
-                            pass
                         # request what card to play n play it
                         cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
                         self.discardDeck.append(cardToPlay)
