@@ -1,6 +1,6 @@
 import random
 import itertools
-from typing import List
+from typing import List , Dict
 
 class Card:
     """Represents a single card"""
@@ -200,7 +200,7 @@ class Player:
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
 
-    def __3_of_a_kind__(self,getSets=False, getCount=False) -> None:
+    def __3_of_a_kind__(self,getSets=True, getCount=False) -> None:
         """Gives the amount of 3 of a kinds in the instances hand"""
         rank_counts = {}
         cards_by_rank = {}  # A dictionary to store cards for each rank
@@ -288,8 +288,7 @@ class Player:
 
 
 
-    def __complete_hand__(self, round:int ):
-        self.round = round
+    def __complete_hand__(self ):
         self.__3_of_a_kind__()
         self.__run_of_four__()
         if self.round == 1:
@@ -311,8 +310,14 @@ class Player:
             if self.set_count >= 3:
                 self.complete_hand = True
                 
+        elif self.round == 5:
+            if len(self.__run_of_four__()) + len(self.__3_of_a_kind__(getSets=True)) == (len(self.hand) / 2):
+                self.complete_hand = True
+        
+        elif self.round > 5:
+            raise Exception("För hög round i complete_hand")
         else:
-            pass
+            raise Exception("Ej integer i round")
         return self.complete_hand
 
     def add_card(self, cards_to_add: list):
@@ -329,21 +334,21 @@ class Player:
             score += card._point_value
         return score
     
-    def declare_hand(self):
+    def declare_hand(self) -> dict[str, List[Card]]:
         """Declares the hand and removes the card"""
         # Get the affected cards 
         runs = self.__run_of_four__()
         sets = self.__3_of_a_kind__()
+
         if self.round == 1:
             # two 3's
-            
             for i in range(2):
                 self.declared["sets"].append(sets[i])
                 for card in sets[i]:
+                    print("tar bort", str(card))
                     self.hand.remove(card)
         elif self.round == 2:
             # 3 n run
-
             self.declared["runs"].append(runs[0])
             for card in runs[0]:
                 self.hand.remove(card)
@@ -354,7 +359,6 @@ class Player:
 
         elif self.round == 3:
             # two runs
-
             for i in range(2):
                 self.declared["runs"].append(runs[i])
                 for card in runs[i]:
@@ -367,6 +371,8 @@ class Player:
                 self.declared["sets"].append(sets[i])
                 for card in sets[i]:
                     self.hand.remove(card)
+        
+        return self.declared
 
     def valid_in_declared_run(self,card:Card) -> bool:
         """Checks if the given Card is valid to add in a declared run"""
@@ -389,7 +395,6 @@ class Player:
         self.set_count = 0
         self.run_count = 0 
         self.turn = False
-    
     
 
 # -------------------------------------------------------------------------------------------------------
@@ -482,7 +487,6 @@ class HumanAgent:
                         "index" : indexOfWanted
                     }
         
-
 class Agent:
     def __init__(self, agentID:int) -> None:
         self.human = True
@@ -520,7 +524,7 @@ class Game:
     def __init__(self, playerIDS: list) -> None:
         self.numOfPlayers = len(playerIDS)
         self.playerIDs = playerIDS
-        self.deck = Deck()
+        self.deck = None
         self.players = {}
         self._playOrder = []
         self.discardDeck = []
@@ -528,10 +532,10 @@ class Game:
         self.currentPlayer = None
         self.declaredCards = {}
         
-
     def start_game(self):
         """Starts the gameplay loop"""
         # assing value to players list and start first round
+        self.deck = Deck()
         self._hand_out_cards(6)
     
         # laying out starting cards
@@ -578,7 +582,6 @@ class Game:
 
                         # start of the turn of the current player - starts when picking up a card
 
-
                         if not self.currentPlayer.takenCard:
                             self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
                             self.currentPlayer.takenCard = True
@@ -589,7 +592,6 @@ class Game:
                             self.currentPlayer.declare_hand()
                             self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared_
 
-                            
                         # request what card to play n play it
                         cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
                         self.discardDeck.append(cardToPlay)
@@ -616,18 +618,26 @@ class Game:
         else:
             return penaltyCards
     
-    def _take_discard(self, playerToPenalize: Player, positionInStack = None):
-        """Gives the player object a penalty card
+    def _take_discard(self, playerToPenalize: Player):
+        """
+        Gives the player object a penalty card
             positionInStack - the index of the wanted card, 
         """
         penaltyCard = self.deck.remove_card(top=True)
         playerToPenalize.add_card([penaltyCard, self.discardDeck[-1]]) # tar översta kortet från högern och lägger till i handen
     
+
+    def declare_hand(self, playerToDeclare) -> None:
+        """Declares the hand of the given player"""
+        declaredCards = playerToDeclare.declare_hand()
+        self.declaredCards[playerToDeclare] = declaredCards
+
     def current_win_conditions(self):
         """Sets the current win conditions depending on the round"""
         winConditions = {"sets": None, "runs": None}
         if self.round == 1:
             winConditions['sets'] = 2
+
                 
         elif self.round == 2:
             winConditions["sets"] = 1 
@@ -652,11 +662,26 @@ class Game:
             pass
         
         return player.get_score()
+    
+    def reset_game(self, startAfter:bool):
+
+        for p in self.players:
+            p.reset()
+        self.deck = None
+        self.players = {}
+        self._playOrder = []
+        self.discardDeck = []
+        self.round = 0
+        self.currentPlayer = None
+        self.declaredCards = {}
+
+
+        self.start_game()
             
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
-        requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
 
+        requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         self.state = {
             "discard": self.discardDeck,
             "round": self.round,
@@ -676,13 +701,15 @@ class Game:
             "completeRuns": requestingPlayer.complete_runs,
         }
         return self.state
-    
+
     
 
 if __name__ == "__main__":
     bob = HumanAgent(1)
-    spel = Game([bob])
+    spel = Game([bob]) #spelareObj.__run_of_four__()
+    spel.deck = Deck()
     spel._hand_out_cards(50)
-    print(spel.players[bob].__run_of_four__())
-
+    spelareObj = spel.players[bob]
+    spelareObj.round = 1
+    print(spelareObj.__complete_hand__(), spelareObj.declare_hand())
 
