@@ -125,21 +125,7 @@ class Deck:
         # creates played card deck and plays a starting card
         self.init_new_round()
 
-    # old unefficant method 
-    """
-    def _create_deck_(self) -> None:
-        '''Creates a deck and shuffles'''
-        self.deck = []
-        suits = 'HCDS'
-        ranks = 'A23456789TJQK'
-        for i in range(2):
-            for suit in suits:
-                for rank in ranks:
-                    code = suit + rank
-                    self.deck.append(Card(code))
-    """
 
-    # more efficant version using itertools
     def _create_deck_(self) -> None:
         """Creates a deck and shuffles"""
         suits = 'HCDS'
@@ -158,7 +144,7 @@ class Deck:
         Removes a card from the deck and returns the item
         i - index to remove
         """
-        
+
         if cardsToRemove is not None:
             popped = []
             for item in cardsToRemove:
@@ -196,7 +182,8 @@ class Player:
         self.turn = False
         self.takenCard = False
         self.declared = {"runs": [], "sets": []} # dict of all the declared cards
-        self.runs = []
+        self.completedRuns = []
+        self.completedSets = []
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
 
@@ -223,7 +210,7 @@ class Player:
                 sets.append(cards)
 
         self.set_count = set_count
-        self.complete_sets = sets
+        self.completedSets = sets
 
         if getSets and getCount:
             return sets, set_count
@@ -231,13 +218,9 @@ class Player:
             return sets
         elif getCount:
             return set_count
-        else:
-            return
-
 
     def __run_of_four__(self) -> (int, List[List[Card]]):
         """Returns the amount of runs of fours in hand along with sorted runs"""
-
         # sorting each card in hand by their suit
         suits = ["Hearts", "Clubs", "Spades", "Diamonds"]
         sorted_hand = []
@@ -282,7 +265,7 @@ class Player:
                         consecutive_count = 1
 
         self.run_count = len(runs)
-        self.runs = runs
+        self.completedRuns = runs
         return runs
 
 
@@ -605,7 +588,8 @@ class Game:
         for hand in cardsToGive:
             self.players[self.playerIDs[i]] = Player(player_id=self.playerIDs[i], cards=hand)
             i += 1
-            
+
+
     def _calculate_penalty(self, positionInStack:int, player:Player):
         """Takes the position of the stack and returns the amount the player has to take"""
         negIndex = positionInStack - len(self.deck.deck)
@@ -702,7 +686,10 @@ class Game:
         }
         return self.state
 
-    
+
+
+
+
 
 if __name__ == "__main__":
     bob = HumanAgent(1)
@@ -710,6 +697,12 @@ if __name__ == "__main__":
     spel.deck = Deck()
     spel._hand_out_cards(50)
     spelareObj = spel.players[bob]
+    trissar = spelareObj.__3_of_a_kind__()
+    #print(trissar)
+    sets = {}
+
+    print(sets)
+
     spelareObj.round = 1
-    print(spelareObj.__complete_hand__(), spelareObj.declare_hand())
+    #print(spelareObj.__3_of_a_kind__())
 
