@@ -327,9 +327,14 @@ class Player:
             # two 3's
             for i in range(2):
                 self.declared["sets"].append(sets[i])
-                for card in sets[i]:
+                for j in range(len(sets[i])):
+                    card = sets[i][j]
                     print("tar bort", str(card))
                     self.hand.remove(card)
+
+                    #del self.hand[self.hand.index(card)]
+                    print(self.hand)
+
         elif self.round == 2:
             # 3 n run
             self.declared["runs"].append(runs[0])
