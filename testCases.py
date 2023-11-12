@@ -32,10 +32,13 @@ if __name__ == "__main__":
     spelareObj = spel.players[bob]
     trissar = spelareObj.__3_of_a_kind__()
     #print(trissar)
+    spelareObj.round = 2
     h = spelareObj.hand
     f = count_card_occurrences(h)
-    print(spelareObj.hand)
     print(spelareObj.declare_hand())
+    print(spelareObj.valid_in_declared_run(Card('HA')))
+
+    
 
     spelareObj.round = 1
     #print(spelareObj.__3_of_a_kind__())

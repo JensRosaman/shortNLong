@@ -309,7 +309,11 @@ class Player:
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
         self.__complete_hand__(self.round)
-
+    
+    def remove_id(self, cardToRemove: Card):
+        """Removes a card from the hand based on its memory adress"""
+        identity = id(cardToRemove)
+        self.hand = [card for card in self.hand if id(card) != id(cardToRemove)]
     def get_score(self):
         """Adds upp the total score of the players hand"""
         score = 0
@@ -322,43 +326,38 @@ class Player:
         # Get the affected cards 
         runs = self.__run_of_four__()
         sets = self.__3_of_a_kind__()
-
         if self.round == 1:
             # two 3's
             for i in range(2):
                 self.declared["sets"].append(sets[i])
                 for j in range(len(sets[i])):
                     card = sets[i][j]
-                    print("tar bort", str(card))
-                    self.hand.remove(card)
-
+                    self.remove_id(cardToRemove=card)
                     #del self.hand[self.hand.index(card)]
-                    print(self.hand)
 
         elif self.round == 2:
             # 3 n run
             self.declared["runs"].append(runs[0])
             for card in runs[0]:
-                self.hand.remove(card)
+                self.remove_id(cardToRemove=card)
 
             self.declared["sets"].append(sets[0])
             for card in sets[0]:
-                self.hand.remove(card)
+                self.remove_id(cardToRemove=card)
 
         elif self.round == 3:
             # two runs
             for i in range(2):
                 self.declared["runs"].append(runs[i])
                 for card in runs[i]:
-                    self.hand.remove(card)
-            
+                    self.remove_id(cardToRemove=card)
            
         elif self.round == 4:
             # 3 st 3
             for i in range(3):
                 self.declared["sets"].append(sets[i])
                 for card in sets[i]:
-                    self.hand.remove(card)
+                    self.remove_id(cardToRemove=card)
         
         return self.declared
 
@@ -575,15 +574,21 @@ class Game:
                             self.currentPlayer.takenCard = True
                         stateOfPlayer = self.get_current_state(i) # updates the current state for the current player
                         
-                        # check if want to declare
-                        if agentOfCurrentPlayer.request_declare(stateOfPlayer):
-                            self.currentPlayer.declare_hand()
-                            self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared_
-
+                        # check if want to declaren
+                        if self.currentPlayer.__complete_hand__():
+                            if agentOfCurrentPlayer.request_declare(stateOfPlayer):
+                                self.currentPlayer.declare_hand()
+                                self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
+                                print(f"{agentOfCurrentPlayer} deklarerar")
+                        if len(self.declaredCards) > 1:
+                            agentOfCurrentPlayer.request_lay_cards()
+                        
                         # request what card to play n play it
                         cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
                         self.discardDeck.append(cardToPlay)
-                        # cases that define each diffrent 
+                        if len(self.currentPlayer) <= 0 and len(self.currentPlayer) > 0:
+                            print(agentOfCurrentPlayer, " vann börjar nästa runda")
+                            continue
 
     def _hand_out_cards(self, cardAmount):
         """Hands out cards to players and creates a playerlist, reset deck!!!"""
