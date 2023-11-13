@@ -618,7 +618,8 @@ class Game:
             positionInStack - the index of the wanted card, 
         """
         penaltyCard = self.deck.remove_card(top=True)
-        playerToPenalize.add_card([penaltyCard, self.discardDeck[-1]]) # tar översta kortet från högern och lägger till i handen
+        playerToPenalize.add_card([penaltyCard, self.discardDeck.pop(-1)]) # tar översta kortet från högern och lägger till i handen
+        
     
 
     def declare_hand(self, playerToDeclare) -> None:
@@ -702,17 +703,4 @@ class Game:
 
 
 if __name__ == "__main__":
-    bob = HumanAgent(1)
-    spel = Game([bob]) #spelareObj.__run_of_four__()
-    spel.deck = Deck()
-    spel._hand_out_cards(50)
-    spelareObj = spel.players[bob]
-    trissar = spelareObj.__3_of_a_kind__()
-    #print(trissar)
-    sets = {}
-
-    print(sets)
-
-    spelareObj.round = 1
-    #print(spelareObj.__3_of_a_kind__())
-
+    pass
