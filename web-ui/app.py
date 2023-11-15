@@ -1,5 +1,4 @@
 from flask import Flask, render_template
-
 app = Flask(__name__)
 
 @app.route('/')
@@ -9,6 +8,6 @@ def index():
 @app.route('/get_game_state')
 def game_state():
     print("hej")
-    return "he"
+    return "hej"
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
