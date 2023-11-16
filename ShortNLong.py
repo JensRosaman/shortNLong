@@ -194,7 +194,7 @@ class Player:
 
         for card in self.hand:
             rank = card._rank
-            if rank in rank_counts:
+            if rank in rank_counts: #räknar antal av varje rank
                 rank_counts[rank] += 1
             else:
                 rank_counts[rank] = 1
@@ -208,6 +208,19 @@ class Player:
             if len(cards) >= 3:
                 set_count += 1
                 sets.append(cards)
+
+        # dublicates removing
+        ids = set([id(card) for card in list(itertools.chain.from_iterable(sets))])
+        for i in range(len(sets)):
+            lst = sets[i]
+            for card in lst:
+                if id(card) in ids:
+                    ids.remove(id(card))
+                else:
+                    sets[i].remove(card)
+
+        # tar bort de sets som hade dubbletter
+        sets = [lst for lst in sets if len(lst) >= 3]
 
         self.set_count = set_count
         self.completedSets = sets
@@ -305,10 +318,11 @@ class Player:
 
     def add_card(self, cards_to_add: list):
         """Adds a card to the deck and checks for win conditions"""
-        if not type(cards_to_add) == list:
+        if not isinstance(cards_to_add, list):
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
-        self.__complete_hand__(self.round)
+        print(self.hand)
+        self.__complete_hand__()
     
     def remove_id(self, cardToRemove: Card):
         """Removes a card from the hand based on its memory adress"""
@@ -397,7 +411,7 @@ class HumanAgent:
         return self.agentID
     
     def __repr__(self) -> str:
-        return str(self.agentID)
+        return f"HumanAgent({self.agentID})"
     
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Agent):
@@ -405,10 +419,13 @@ class HumanAgent:
         return False
     
 
+
+# -------------------- Agent requests
     def request_declare(self, state:dict) -> bool:
         """Returns bool if the agent wants to declare their cards"""
-        ans = input(f"u wnna open your cards? y/n p{self.agentID}")
-        if ans == "y":
+        print(state)
+        ans = input(f"u wnna declare your cards? y/n p{self.agentID}")
+        if ans:
             return True
         else:
             return False
@@ -416,7 +433,7 @@ class HumanAgent:
     def request_card2Play(self, state:dict) -> int:
         "Asks for the index of the card to play -> index int of played card"
         print(f"State: {state}")
-        ans = input("Vilket kort vill du lägga (skriv index)")
+        ans = input(f"{self.agentID} Vilket kort vill du lägga (skriv index) {state['hand']}")
         return int(ans)
 
     def request_take_discard(self, state:dict) -> bool:
@@ -424,55 +441,12 @@ class HumanAgent:
         
         if self.isHuman:
             print(f"Current state is {state}")
-            ans = input("Ta kortet från discard? any key for yes")
+            ans = input(f"{self.agentID}Ta kortet från discard? any key for yes")
             if ans:
                 return True
 
-    def request_action(self, state:dict):
-        """Gets the state of the game and returns an answer to the game class"""
-        
-        agentAction = { # Agent action represents the agents action
-            "takeCard": None, # bool if taking card
-            "takeFromDiscard": None,
-            "indexToTakeFrom": None,
-        }
-        if self.isHuman: # Checks if it is human player and if input is expected
-            print(f"Current state is {state}")
 
-            if state["isCurrentPlayer"] and not state["takenCard"]: # Checks if its the agents turn and have not taken a card
-                availableActions = f"""
-                1. Take from discard ({state["discard"][-1]})
-                2. Take from regular deck
-                """
-                userAction = input(f"What do you want to do \n {availableActions}")
-                if userAction == "1":
-                    indexOfWanted = input("Vilket kort bakifrån?")
-                    agentAction["takeFromDiscard"] = True
-                    agentAction["indexToTakeFrom"] = indexOfWanted
-                    agentAction["takeCard"] = True
-                    return agentAction
-            # ------------------------------------------------------------------------- 
-        elif not self.isHuman:
-            print(f"Current state is {state}")
-
-            if state["isCurrentPlayer"] and not state["takenCard"]: # Checks if its the agents turn and have not taken a card
-                pass
-            elif state["takenCard"] and state['isCurrentPlayer']: # if player has taken a card and its their turn
-                pass
-            elif state['isCurrentPlayer']:
-                pass
-            else:
-                availableActions = f"""
-                1. Take from discard ({state["discard"][-1]})
-                2. Take from regular deck
-                """
-                userAction = input(f"What do you want to do \n {availableActions}")
-
-                if userAction == "1":
-                    indexOfWanted = input("Which card")
-                    return {
-                        "index" : indexOfWanted
-                    }
+            # -------------------------------------------------------------------------
         
 class Agent:
     def __init__(self, agentID:int) -> None:
@@ -536,6 +510,8 @@ class Game:
             # Loops through the players, two for loops so each player takes turns starting
             for i in self._playOrder:
                 self.round += 1 # next turn starting
+                for k, l in self.players.items():
+                    l.turn = self.round
                 # Gameplay loop for the diffrent rounds
                 notStopped = True
                 while notStopped: 
@@ -547,6 +523,8 @@ class Game:
                         while True: # loops until no one picks from discard or the players whos turn it is picks a card
                             # -------------------checks if anyone wants to pick from discard
                             agentsRequests = {}
+                            if len(self.discardDeck) <= 0:
+                                break # cant take from empty deck
                             for agent in self.players:
                                 state = self.get_current_state(playerId=agent)
                                 useraction = agent.request_take_discard(state)
@@ -584,9 +562,9 @@ class Game:
                             agentOfCurrentPlayer.request_lay_cards()
                         
                         # request what card to play n play it
-                        cardToPlay = agentOfCurrentPlayer.request_card2play(state=stateOfPlayer)
+                        cardToPlay = agentOfCurrentPlayer.request_card2Play(state=stateOfPlayer)
                         self.discardDeck.append(cardToPlay)
-                        if len(self.currentPlayer) <= 0 and len(self.currentPlayer) > 0:
+                        if len(self.currentPlayer.hand) <= 0 and len(self.currentPlayer.declared) > 0:
                             print(agentOfCurrentPlayer, " vann börjar nästa runda")
                             continue
 
@@ -618,7 +596,9 @@ class Game:
             positionInStack - the index of the wanted card, 
         """
         penaltyCard = self.deck.remove_card(top=True)
-        playerToPenalize.add_card([penaltyCard, self.discardDeck.pop(-1)]) # tar översta kortet från högern och lägger till i handen
+        playerToPenalize.add_card(penaltyCard) # tar översta kortet från högern och lägger till i handen
+        playerToPenalize.add_card(self.discardDeck.pop(-1))
+
         
     
 
@@ -688,12 +668,12 @@ class Game:
             "winner": None,
             "currentScore": requestingPlayer.get_score(),
             "situation": requestingPlayer.takenCard,
-            "hasCompleteHand": requestingPlayer.__complete_hand__(self.round),
+            "hasCompleteHand": requestingPlayer.__complete_hand__(),
             "runCount": requestingPlayer.run_count,
             "setCount": requestingPlayer.set_count,
             "takenCard": requestingPlayer.takenCard,
-            "completeSets": requestingPlayer.complete_sets,
-            "completeRuns": requestingPlayer.complete_runs,
+            "completeSets": requestingPlayer.completedSets,
+            "completeRuns": requestingPlayer.completedRuns,
         }
         return self.state
 

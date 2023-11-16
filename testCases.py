@@ -23,22 +23,28 @@ def count_card_occurrences(listor):
 
     return card_counts
 
+def start_game():
+    spelare = [1, 2, 3, 4, 5]
+    for i in spelare:
+        spelare[spelare.index(i)] = HumanAgent(i)
+    spel = Game(spelare)
+    spel.start_game()
+
+def simulate_game():
+
+        bob = HumanAgent(1)
+        spel = Game([bob]) #spelareObj.__run_of_four__()
+        spel.deck = Deck()
+        spel._hand_out_cards(10)
+        spelareObj = spel.players[bob]
+        trissar = spelareObj.__3_of_a_kind__()
+        #print(trissar)
+        spelareObj.round = 2
+        h = spelareObj.hand
+        print(trissar)
+        print(h)
+        print()
 
 if __name__ == "__main__":
-    bob = HumanAgent(1)
-    spel = Game([bob]) #spelareObj.__run_of_four__()
-    spel.deck = Deck()
-    spel._hand_out_cards(50)
-    spelareObj = spel.players[bob]
-    trissar = spelareObj.__3_of_a_kind__()
-    #print(trissar)
-    spelareObj.round = 2
-    h = spelareObj.hand
-    f = count_card_occurrences(h)
-    print(spelareObj.declare_hand())
-    print(spelareObj.valid_in_declared_run(Card('HA')))
+    simulate_game()
 
-    
-
-    spelareObj.round = 1
-    #print(spelareObj.__3_of_a_kind__())

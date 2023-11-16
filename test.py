@@ -12,10 +12,4 @@ class b:
         else:
             return False
 if __name__ == "__main__":
-    d = [b(1),b(1),b(3)]
-    c = d[0]
-    e = []
-    e.append(d[0])
-    e.append(d[1])
-    e.remove(d[0])
-    print(id(c),id(d[1]))
+    print([123] + [12354])

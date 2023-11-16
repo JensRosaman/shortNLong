@@ -369,90 +369,8 @@ class Stack:
             elif by == 'both':
                 self._cards.sort()
 
-    @property
-    def runs(self):
-        """Returns possible runs in a stack"""
-        res = self._preprocess_cards()
-        ranks = res['ranks']
-        cards = []
-        kings = [] 
 
-        for i in itertools.izip(ranks, res['sets']):
-            # Get kings and jokers
-            if i[0] == 0xd:
-                # King
-                kings = i[1] 
-            elif i[0] == 0xe:
-                # Joker
-                pass
-            else:
-                # Any other card
-                cards.append(i)
 
-        # Sort cards
-        cards.sort(key=lambda x: x[0])
-
-        # iterate over len(cards)-1 because can't have a run starting at the 
-        # last card
-        runs = []
-        skip = -1 
-
-        for i in range(len(cards)-1):
-            if i <= skip:
-                continue
-
-            run = [cards[i][1]]
-            prev = cards[i][0]
-
-            for j in range(i+1, len(cards)):
-                if prev == cards[j][0]-1:
-                    # This is a run. Append to run
-                    run.append(cards[j][1])
-                    prev = cards[j][0]
-                    skip = j
-                else:
-                    break
-
-            if len(run) >= 2:
-                runs.append(run)
-
-        # Try to join found sequences using kings
-        if len(kings) == 0 or len(runs) < 2:
-            return runs
-
-        nk = len(kings)
-        runs_with_wilds = []
-
-        for x, y in itertools.permutations(runs, 2):
-            # Note the -1. If a card is missing, the difference will be 2, not 1
-            req_kings = y[0][0]._rank_value - x[-1][0]._rank_value - 1
-
-            if abs(req_kings) <= nk and req_kings > 0:
-                # We have enough kings to join the pair
-                tmp = []
-                tmp.extend(x)
-                tmp.append(req_kings * kings)
-                tmp.extend(y)
-                runs_with_wilds.append(tmp)
-
-        if len(runs_with_wilds) > 0:
-            runs.append(runs_with_wilds) 
-
-        return runs
-
-    def _issequence(list1, list2):
-        """Function receives two lists of tuples of the form
-        (rank, [cards of that rank]) and checks if they're a sequence
-        It assumes that list1 and list2 are sequences"""
-
-        if list1[-1][0] == list2[0][0]-1:
-            # list1,list2 form a sequence
-            return True
-        if list2[-1][0] == list1[0][0]-1:
-            # list2,list1 form a sequence
-            return True
-
-        return False
 
     @property
     def sets(self):
@@ -464,38 +382,8 @@ class Stack:
             sets.append(i)
         return sets 
 
-    def _preprocess_cards(self):
-        """Sorts and analyzes cards"""
-        tmp = copy.copy(self) # Perform shallow copy of self, so Cards are references
-        tmp.sort(by='rank')
 
-        # Break into sets
-        ranks = []
-        groups = []
-        for k, v in itertools.groupby(tmp, lambda x: x._rank_value):
-            groups.append(list(v))
-            ranks.append(k)
 
-        return {'ranks' : ranks, 'sets' : groups}
-
-    def set_down(self):
-        pass
-
-    def deal(self, cards, players = 3):
-        if len(self._cards) < cards * players: 
-            raise CardError('Cannot deal that many cards from Stack') 
-
-        hands = []
-        for j in range(players):
-            hands.append(Stack(self._cards[:cards]))
-            del self._cards[:cards]
-
-        return hands
-
-    def draw(self):
-        if len(self._cards) == 0: 
-            raise CardError('Cannot draw from an empty Stack') 
-        return self._cards.pop()
 
     def make_deck(self, decks=1):
         """Create a stack of one or more decks"""
@@ -571,21 +459,3 @@ class Stack:
         self._iter_index += 1
         return self._cards[self._iter_index - 1]
 
-suits = 'HCDS '
-ranks = 'A23456789TJQKX'
-suit_names = ['Hearts', 'Clubs', 'Diamonds', 'Spades', None]
-rank_names = ['Ace', 'Two', 'Three', 'Four', 'Five', \
-                'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Jack', \
-                'Queen', 'King', 'Joker']
-# Unit tests
-if __name__ == '__main__':
-    import unittest
-    import test_stack
-    import test_card
-    import test_game
-    card_suite = unittest.TestLoader().loadTestsFromTestCase(test_card.TestCardCreation)
-    stack_suite = unittest.TestLoader().loadTestsFromTestCase(test_stack.TestStack)
-    game_suite = unittest.TestLoader().loadTestsFromTestCase(test_game.TestGame)
-
-    unittest.TextTestRunner(verbosity=2).run( \
-            unittest.TestSuite([card_suite, stack_suite, game_suite]))
