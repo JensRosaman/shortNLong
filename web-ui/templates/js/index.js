@@ -1,3 +1,5 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+
 class Player {
     constructor(id, state) {
         this.id = id
@@ -19,9 +21,7 @@ function startGame() {
         })
         .catch(error => console.error('Error:', error));
 
-    while (true) {
-        // Your logic here
-    }
+
 }
 
 function makeMove() {
@@ -53,9 +53,17 @@ function getGameState() {
         })
         .catch(error => console.error('Error:', error));
 }
+// location.hostname
+const socket = io.connect('http://' + document.domain + ':' + location.port);
 
-// Initial call to get the game state when the page loads
-getGameState();
+// Example: Send a message from frontend to backend
+socket.emit('message_from_frontend', { data: 'Hello from the frontend!' });
+
+// Example: Receive a message from backend
+socket.on('message_from_backend', (data) => {
+    console.log('Message from backend:', data);
+});
+
 
 document.getElementById('startGameBtn').addEventListener('click', startGame);
 document.getElementById('makeMoveBtn').addEventListener('click', makeMove);

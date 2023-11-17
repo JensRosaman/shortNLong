@@ -46,5 +46,5 @@ def simulate_game():
         print()
 
 if __name__ == "__main__":
-    simulate_game()
+    start_game()
 

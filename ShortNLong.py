@@ -307,13 +307,14 @@ class Player:
                 self.complete_hand = True
                 
         elif self.round == 5:
-            if len(self.__run_of_four__()) + len(self.__3_of_a_kind__(getSets=True)) == (len(self.hand) / 2):
+            if self.run_count > 0 and self.set_count > 1 and ((max([len(i) for i in self.completedSets]) +  max([len(i) for i in self.completedRuns]))) - self.hand < 2:
                 self.complete_hand = True
-        
+
         elif self.round > 5:
             raise Exception("För hög round i complete_hand")
         else:
             raise Exception("Ej integer i round")
+        print(self.complete_hand)
         return self.complete_hand
 
     def add_card(self, cards_to_add: list):
@@ -326,7 +327,6 @@ class Player:
     
     def remove_id(self, cardToRemove: Card):
         """Removes a card from the hand based on its memory adress"""
-        identity = id(cardToRemove)
         self.hand = [card for card in self.hand if id(card) != id(cardToRemove)]
     def get_score(self):
         """Adds upp the total score of the players hand"""
@@ -563,10 +563,11 @@ class Game:
                         
                         # request what card to play n play it
                         cardToPlay = agentOfCurrentPlayer.request_card2Play(state=stateOfPlayer)
-                        self.discardDeck.append(cardToPlay)
+                        self.discardDeck.append(self.currentPlayer.hand[cardToPlay])
                         if len(self.currentPlayer.hand) <= 0 and len(self.currentPlayer.declared) > 0:
                             print(agentOfCurrentPlayer, " vann börjar nästa runda")
                             continue
+                        self.currentPlayer.takenCard = False
 
     def _hand_out_cards(self, cardAmount):
         """Hands out cards to players and creates a playerlist, reset deck!!!"""
