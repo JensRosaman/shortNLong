@@ -474,10 +474,7 @@ class Agent:
     def request_take_discard(self, state:dict) -> bool:
         """Gets state of the game and returns ans"""
         
-    def request_action(self, state:dict):
-        """Gets the state of the game and returns an answer to the game class"""
-        pass
-        
+
 # playerId är objekt för att repsentera den som ger instruktioner till spel modulen
 
 class Game:
