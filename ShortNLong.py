@@ -667,11 +667,13 @@ class Game:
             "winner": False,#bool
             "currentScore": requestingPlayer.get_score(),#int
             "takenCard": requestingPlayer.takenCard, #bool
-            "hasCompleteHand": requestingPlayer.__complete_hand__(), #int
+            "hasCompleteHand": requestingPlayer.__complete_hand__(), #bool
             "runCount": requestingPlayer.run_count, # int
             "setCount": requestingPlayer.set_count, # int
             "completeSets": requestingPlayer.completedSets, #list[Card]
             "completeRuns": requestingPlayer.completedRuns, # list[Card]
+            "declaredCards": {player.ID: self.declaredCard[player] for player in self.declaredCards},
+
         }
         return self.state
 
@@ -681,7 +683,7 @@ class Game:
         if not self.guiActive:
             return
 
-        url = "http://192.168.0.17:5000/post_game_state"
+        url = "http://192.168.0.17:5000/game_state"
         response = requests.post(url=url, data=self.get_game_state())
         if not response.ok:
             print(response.text)
@@ -689,10 +691,9 @@ class Game:
 
         return
 
-
     def get_game_state(self):
         """Creates an overarching game state that represents the whole game suitable for a flask implenetation"""
-        #return {"bob": 3}
+        return {"bob": 3}
         state = {
             "playerHands" : {playerID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
             "currentPlayerID" : self.currentPlayer.id,

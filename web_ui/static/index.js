@@ -14,35 +14,19 @@ function startGame() {
 
 }
 
-function makeMove() {
-    // Your logic to make a move goes here
-    // You'll need to implement the move data and send it to the backend
-    // For example, playing a card or declaring the hand
-    fetch('/make_move', {
-        method: 'GET', // Change the method as per your game's requirements
-        headers: {
-            'Content-Type': 'application/json'
-            // Add any required headers
-        },
-        // Add your move data in the body if needed
-    })
+
+
+function getGameState() {
+    console.log("knapp tryckt")
+    fetch('/game_state')
         .then(response => response.json())
         .then(data => {
-            console.log(data); // Output game state or success message in the console
-            getGameState();
+            console.log(data)
         })
         .catch(error => console.error('Error:', error));
 }
 
-function getGameState() {
-    fetch('/get_game_state')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('gameState').innerText = JSON.stringify(data, null, 2);
-            // Update UI with game state data
-        })
-        .catch(error => console.error('Error:', error));
-}
+
 
 
 class Player {
