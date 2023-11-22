@@ -13,6 +13,7 @@ class Agent:
         self.stateSize = stateSize
         self.actionSize = actionSize
         self.agentID = agentID
+        
 
     def __hash__(self) -> int:
         return self.agentID
