@@ -1,6 +1,12 @@
 import random
 import itertools
+import requests
 from typing import List , Dict
+from web_ui.app import app, url_for
+
+
+
+
 
 class Card:
     """Represents a single card"""
@@ -314,7 +320,6 @@ class Player:
             raise Exception("För hög round i complete_hand")
         else:
             raise Exception("Ej integer i round")
-        print(self.complete_hand)
         return self.complete_hand
 
     def add_card(self, cards_to_add: list):
@@ -322,7 +327,6 @@ class Player:
         if not isinstance(cards_to_add, list):
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
-        print(self.hand)
         self.__complete_hand__()
     
     def remove_id(self, cardToRemove: Card):
@@ -478,7 +482,7 @@ class Agent:
 
 class Game:
     """Handles all the internal logic of the game"""
-    def __init__(self, playerIDS: list) -> None:
+    def __init__(self, playerIDS: list, guiActive = False) -> None:
         self.numOfPlayers = len(playerIDS)
         self.playerIDs = playerIDS
         self.deck = None
@@ -488,6 +492,7 @@ class Game:
         self.round = 0
         self.currentPlayer = None
         self.declaredCards = {}
+        self.guiActive = guiActive
         
     def start_game(self):
         """Starts the gameplay loop"""
@@ -596,9 +601,6 @@ class Game:
         playerToPenalize.add_card(penaltyCard) # tar översta kortet från högern och lägger till i handen
         playerToPenalize.add_card(self.discardDeck.pop(-1))
 
-        
-    
-
     def declare_hand(self, playerToDeclare) -> None:
         """Declares the hand of the given player"""
         declaredCards = playerToDeclare.declare_hand()
@@ -659,20 +661,47 @@ class Game:
             "round": self.round,#int
             "winConditions": self.current_win_conditions(),#dict
             "playOrder": self._playOrder,# list[Player]
-            "currentPlayer": self.currentPlayer,# bool
+            "currentPlayer": self.currentPlayer,# player
             "isCurrentPlayer": self.currentPlayer == requestingPlayer, # bool
             "hand": requestingPlayer.hand, # list[Card]
             "winner": False,#bool
             "currentScore": requestingPlayer.get_score(),#int
-            "situation": requestingPlayer.takenCard, #bool
+            "takenCard": requestingPlayer.takenCard, #bool
             "hasCompleteHand": requestingPlayer.__complete_hand__(), #int
             "runCount": requestingPlayer.run_count, # int
             "setCount": requestingPlayer.set_count, # int
-            "takenCard": requestingPlayer.takenCard, #bool
             "completeSets": requestingPlayer.completedSets, #list[Card]
             "completeRuns": requestingPlayer.completedRuns, # list[Card]
         }
         return self.state
+
+    def send_state(self):
+        """sends a post http to the server with the game state"""
+        # no gui active return nothing
+        if not self.guiActive:
+            return
+
+        url = url_for('post_game_state')
+        response = requests.post(url=url, data=self.get_game_state())
+        if not response.ok:
+            raise Exception("Bad post answer to app.py")
+        return
+
+
+    def get_game_state(self):
+        """Creates an overarching game state that represents the whole game suitable for a flask implenetation"""
+        state = {
+            "playerHands" : {playerID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
+            "currentPlayerID" : self.currentPlayer.id,
+            "playOrder": self._playOrder,
+            "round": self.round,
+            "winConditions": self.current_win_conditions(),
+            "declaredCards":  {player.ID: self.declaredCard[player] for player in self.declaredCards},
+            "playerScores": {player.ID: player.get_score() for player in self.players},
+
+        }
+        return state
+
 
 
 

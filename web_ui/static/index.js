@@ -1,4 +1,4 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+console.log("hek")
 
 
 
@@ -48,23 +48,31 @@ function getGameState() {
 class Player {
     constructor(id) {
         this.element = document.getElementById(id)
-        this.id = id
-        this.board = document.createElement('div');
-        this.board.style.background = 'blue';    }
-    
-    
+        this.id = id // id is number 1 - 5
+
+
+    }
 }
-// location.hostname
-const socket = io();
 
-// Example: Send a message from frontend to backend
-socket.emit('message_from_frontend', { data: 'Hello from the frontend!' });
+function game_loop(){
+    // get intial game state
+    let gameState ;
+    fetch('/get_game_state')
+        .then(response => response.json())
+        .then(data => {
+            gameState = data;
+        })
+        .catch(error => console.error('Error:', error));
 
-// Example: Receive a message from backend
-socket.on('message_from_backend', (data) => {
-    console.log('Message from backend:', data);
-});
+    var parent = document.getElementById('parent')
+    let p = document.createElement("p")
+    for (var child of parent.children){
+
+        p.innerText = gameState["playerHands"][child.id]
+    }
+
+}
 
 
-document.getElementById('startGameBtn').addEventListener('click', startGame);
+document.getElementById('startGameBtn').addEventListener('click', startGame());
 document.getElementById('makeMoveBtn').addEventListener('click', makeMove);

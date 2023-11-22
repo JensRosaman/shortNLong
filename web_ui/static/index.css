@@ -1,0 +1,26 @@
+body{
+    background-color: aqua;
+}
+
+#parent {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Optional: Set the height of the parent container to the full viewport height */
+}
+
+#parent > div {
+    flex: 0 0 30%; /* Optional: Adjust the width of the child boxes */
+    margin: 10px; /* Optional: Add margin for spacing between boxes */
+    height: 200px;
+    width: 200px;
+}
+
+/* Optional: Add some styling to make it visually appealing */
+#parent > div {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 20px;
+    text-align: center;
+}
