@@ -450,7 +450,6 @@ class HumanAgent:
         
 class Agent:
     def __init__(self, agentID:int) -> None:
-        self.human = True
         self.agentID = agentID
 
     def __hash__(self) -> int:
@@ -656,22 +655,22 @@ class Game:
 
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         self.state = {
-            "discard": self.discardDeck,
-            "round": self.round,
-            "winConditions": self.current_win_conditions(),
-            "playOrder": self._playOrder,
-            "currentPlayer": self.currentPlayer,
-            "isCurrentPlayer": self.currentPlayer == requestingPlayer,
-            "hand": requestingPlayer.hand,
-            "winner": None,
-            "currentScore": requestingPlayer.get_score(),
-            "situation": requestingPlayer.takenCard,
-            "hasCompleteHand": requestingPlayer.__complete_hand__(),
-            "runCount": requestingPlayer.run_count,
-            "setCount": requestingPlayer.set_count,
-            "takenCard": requestingPlayer.takenCard,
-            "completeSets": requestingPlayer.completedSets,
-            "completeRuns": requestingPlayer.completedRuns,
+            "discard": self.discardDeck,#list[card]
+            "round": self.round,#int
+            "winConditions": self.current_win_conditions(),#dict
+            "playOrder": self._playOrder,# list[Player]
+            "currentPlayer": self.currentPlayer,# bool
+            "isCurrentPlayer": self.currentPlayer == requestingPlayer, # bool
+            "hand": requestingPlayer.hand, # list[Card]
+            "winner": False,#bool
+            "currentScore": requestingPlayer.get_score(),#int
+            "situation": requestingPlayer.takenCard, #bool
+            "hasCompleteHand": requestingPlayer.__complete_hand__(), #int
+            "runCount": requestingPlayer.run_count, # int
+            "setCount": requestingPlayer.set_count, # int
+            "takenCard": requestingPlayer.takenCard, #bool
+            "completeSets": requestingPlayer.completedSets, #list[Card]
+            "completeRuns": requestingPlayer.completedRuns, # list[Card]
         }
         return self.state
 
