@@ -1,16 +1,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
 
-class Player {
-    constructor(id, state) {
-        this.id = id
-        this.state = state;
-        this.hand = state["hand"];
-        this.board = document.createElement('div');
-        this.board.style.background = 'blue';
-        this.cards = document.createElement('p');
-        cards.text = ''
-    }
-}
+
 
 function startGame() {
     fetch('/start_game')
@@ -53,8 +43,19 @@ function getGameState() {
         })
         .catch(error => console.error('Error:', error));
 }
+
+
+class Player {
+    constructor(id) {
+        this.element = document.getElementById(id)
+        this.id = id
+        this.board = document.createElement('div');
+        this.board.style.background = 'blue';    }
+    
+    
+}
 // location.hostname
-const socket = io.connect('http://' + document.domain + ':' + location.port);
+const socket = io();
 
 // Example: Send a message from frontend to backend
 socket.emit('message_from_frontend', { data: 'Hello from the frontend!' });

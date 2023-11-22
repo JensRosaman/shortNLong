@@ -1,13 +1,10 @@
 import numpy as np
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.optimizers import Adam
+from tensorflow.python.keras.models import Sequential
 from collections import deque
-import random
-import  tensorflow as tf
+from tensorflow.python.keras.layers import Dense
 from tensorflow.python.keras.optimizers import adam_v2 as Adam
 # Define the RL agent class
-
+ 
 class Agent:
     def __init__(self, agentID: int, stateSize, actionSize) -> None:
         self.stateSize = stateSize
@@ -41,6 +38,4 @@ class Agent:
             q_values = self.q_table[state_representation, :]
             return np.argmax(q_values)
 
-
-    def request_take_discard(self, state: dict) -> bool:
-        """Gets state of the game and returns ans"""
+    
