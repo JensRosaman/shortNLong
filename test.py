@@ -1,4 +1,4 @@
-
+import requests
 class b:
     def __init__(self, kod) -> None:
         self.kod = kod
@@ -12,4 +12,4 @@ class b:
         else:
             return False
 if __name__ == "__main__":
-    print([123] + [12354])
+    print(requests.get("http://192.168.0.17:5000/").text)

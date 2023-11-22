@@ -2,7 +2,7 @@ import random
 import itertools
 import requests
 from typing import List , Dict
-from web_ui.app import app, url_for
+
 
 
 
@@ -681,15 +681,18 @@ class Game:
         if not self.guiActive:
             return
 
-        url = url_for('post_game_state')
+        url = "http://192.168.0.17:5000/post_game_state"
         response = requests.post(url=url, data=self.get_game_state())
         if not response.ok:
+            print(response.text)
             raise Exception("Bad post answer to app.py")
+
         return
 
 
     def get_game_state(self):
         """Creates an overarching game state that represents the whole game suitable for a flask implenetation"""
+        #return {"bob": 3}
         state = {
             "playerHands" : {playerID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
             "currentPlayerID" : self.currentPlayer.id,

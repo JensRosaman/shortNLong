@@ -33,18 +33,20 @@ def start_game():
 def simulate_game():
 
         bob = HumanAgent(1)
-        spel = Game([bob]) #spelareObj.__run_of_four__()
+        spel = Game([bob], guiActive=True) #spelareObj.__run_of_four__()
         spel.deck = Deck()
         spel._hand_out_cards(10)
-        spelareObj = spel.players[bob]
-        trissar = spelareObj.__3_of_a_kind__()
+        spel.send_state()
+        #spelareObj = spel.players[bob]
+        #trissar = spelareObj.__3_of_a_kind__()
         #print(trissar)
-        spelareObj.round = 2
-        h = spelareObj.hand
-        print(trissar)
-        print(h)
-        print()
+        #spelareObj.round = 2
+        #h = spelareObj.hand
+        #print(trissar)
+
+
 
 if __name__ == "__main__":
-    start_game()
+    #start_game()
+    simulate_game()
 
