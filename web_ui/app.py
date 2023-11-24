@@ -5,14 +5,10 @@ import secrets
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
+
 @app.route('/')
 def index():
     return render_template("index.html")
-
-
-
-
-
 @app.route("/game_state", methods = ["POST","GET"] )
 def post_game_state():
     if request.method == "POST":
@@ -20,7 +16,7 @@ def post_game_state():
         session["data"] = data
         return {'status': 'success', 'message': 'POST request successful', 'data': data}
     elif request.method == "GET":
-        data = session.get("data", None)  # Use session.get to avoid KeyError
+        data = session.get("data", None)
 
         if data is not None:
             return jsonify(data)
@@ -32,7 +28,7 @@ def run_app():
 
 
 if __name__ == "__main__":
-    tråd = threading.Thread(target=run_app())
-    tråd.start()
+    thread = threading.Thread(target=run_app())
+    thread.start()
 
 
