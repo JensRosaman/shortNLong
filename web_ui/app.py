@@ -23,9 +23,9 @@ def post_game_state():
         return jsonify({'status': 'error', 'message': 'No data available for GET request'})
 
 def run_app():
-    app.run(debug=True,host="192.168.0.17",port=5000)
+    app.run(debug=True,host="0.0.0.0",port=5000)
 
-
+# 192.168.0.17
 
 if __name__ == "__main__":
     thread = threading.Thread(target=run_app())
