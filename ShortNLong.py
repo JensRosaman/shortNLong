@@ -1,7 +1,7 @@
 import random
 import itertools
 import requests
-from typing import List , Dict
+from typing import List
 
 
 
@@ -118,7 +118,7 @@ class Card:
         else:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
 
-    def __hash__(self) -> str:
+    def __hash__(self) -> int:
         return self._point_value
 
 class Deck:
@@ -145,7 +145,7 @@ class Deck:
         # Shuffle the deck
         random.shuffle(self.deck)
 
-    def remove_card(self, cardsToRemove:list = None, top=False) -> list[Card]:
+    def remove_card(self, cardsToRemove:list = None, top=False) -> Card:
         """
         Removes a card from the deck and returns the item
         i - index to remove
@@ -453,6 +453,7 @@ class HumanAgent:
             # -------------------------------------------------------------------------
         
 class Agent:
+    """ serves as the template to create other agent classes of"""
     def __init__(self, agentID:int) -> None:
         self.agentID = agentID
 
@@ -463,7 +464,7 @@ class Agent:
         return str(self.agentID)
     
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, Agent):
+        if isinstance(other, self.__class__):
             return self.agentID == other.agentID
         return False
 
@@ -493,6 +494,7 @@ class Game:
         self.currentPlayer = None
         self.declaredCards = {}
         self.guiActive = guiActive
+        self.guiAgents = [agent.agentID for agent in self.playerIDs if "guiAgent" in agent.__dict__]
         
     def start_game(self):
         """Starts the gameplay loop"""
@@ -700,6 +702,7 @@ class Game:
             "winConditions": self.current_win_conditions(),
             "declaredCards":  {player.ID: self.declaredCard[player] for player in self.declaredCards},
             "playerScores": {player.ID: player.get_score() for player in self.players},
+            "guiAgents": self.guiAgents,
 
         }
         return state

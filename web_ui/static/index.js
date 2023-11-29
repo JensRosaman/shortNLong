@@ -2,8 +2,8 @@ console.log("Script started")
 let gameState;
 var parent = document.getElementById('parent')
 round = document.getElementById("round");
-
-
+var socket = io();
+socket.emit("test","bruh")
 function startGame() {
     fetch('/start_game')
         .then(response => response.text())
@@ -46,21 +46,12 @@ function updateUI() {
 }
 
 
-class Player {
-    constructor(id) {
-        this.element = document.getElementById(id)
-        this.id = id // id is number 1 - 5
 
 
-    }
-}
 
 function game_loop(){
     // get intial game state
     let gameState = getGameState()
-
-
-
 
     var parent = document.getElementById('parent')
     let p = document.createElement("p")
@@ -71,7 +62,8 @@ function game_loop(){
 
 }
 
+function test(){
+
+}
 
 
-document.getElementById('startGameBtn').addEventListener('click', startGame());
-document.getElementById('makeMoveBtn').addEventListener('click', makeMove);

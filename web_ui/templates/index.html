@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>Coolt spel</title>
-    <script src="{{ url_for('static', filename='index.js') }}"></script>
+   <!-- <script src="{{ url_for('static', filename='index.js') }}"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='index.css') }}">
@@ -10,10 +14,62 @@
     <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <script type="text/javascript" charset="utf-8">
+        console.log("Script started")
+
+        let gameState;
+        var parent = document.getElementById('parent')
+        round = document.getElementById("round");
+        var socket = io();
+        socket.emit("test","connection made!")
+
+        socket.on("game_state", function(state){
+            console.log("State recived")
+            updateUI(state)
+        })
+
+        function test(){
+
+        }
+        function updateUI(state) {
+            // Updates the game ui with the info from the state
+
+            let p = document.createElement("p")
+            for (var child of parent.children){
+
+                p.innerText = state["playerHands"][child.id].toString()
+            }
+        }
+
+        // Agent
+
+        socket.on("uiAgent", function (data){
+
+            console.log("handling uiAgent:", data["agentID"])
+        })
+
+
+        function agent_request(type, id){
+
+            // gets the player div
+            var yesBtn = document.get.createElement("button");
+            var noBtn = document.get.createElement("button");
+
+            yesBtn.textContent = "Ja";
+            noBtn.textContent = "Nej";
+            let infoDiv = document.getElementById(id).querySelector("div");
+            infoDiv.appendChild(yesBtn);
+            infoDiv.appendChild(noBtn);
+
+        }
+        document.getElementById('startGameBtn').addEventListener('click', startGame());
+        document.getElementById('makeMoveBtn').addEventListener('click', makeMove);
+
+    </script>
 </head>
 <body>
 <span>
-    <h1>Runda:</h1><h1 id="round">0</h1>
+    <h1>Runda:</h1><h1 id="round"></h1>
 </span>
 <div id="parent">
     <div id="1">
@@ -53,6 +109,6 @@
     </div>
 </div>
 
- <button type="button" onclick="getGameState()">Start</button>
+ <button type="button" onclick="test()">Start</button>
 </body>
 </html>
