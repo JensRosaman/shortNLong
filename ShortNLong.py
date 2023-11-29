@@ -654,7 +654,6 @@ class Game:
             
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
-
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         self.state = {
             "discard": self.discardDeck,#list[card]
@@ -688,7 +687,6 @@ class Game:
         if not response.ok:
             print(response.text)
             raise Exception("Bad post answer to app.py")
-
         return
 
     def get_game_state(self):
