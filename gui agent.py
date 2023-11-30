@@ -2,10 +2,10 @@ import requests
 class GuiAgent:
     """ serves as the template to create other agent classes of"""
 
-    def __init__(self, agentID: int, apiUrl: str) -> None:
+    def __init__(self, agentID: int, apiUrl = "http://192.168.0.17:5000/") -> None:
         self.agentID = agentID
-        self.url = apiUrl + 'request_gui'
-        guiAgent = True
+        self.url = apiUrl + 'request_agent'
+        guiAgent = True # game checks for guiAgent in __dict__
 
     def __hash__(self) -> int:
         return self.agentID

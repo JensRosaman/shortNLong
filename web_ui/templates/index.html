@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="se">
 <head>
     <title>Coolt spel</title>
    <!-- <script src="{{ url_for('static', filename='index.js') }}"></script> -->
@@ -15,55 +15,66 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <script type="text/javascript" charset="utf-8">
-        console.log("Script started")
+        document.addEventListener("DOMContentLoaded", function() {
+            console.log("Script started")
+            round = document.getElementById("round");
 
-        let gameState;
-        var parent = document.getElementById('parent')
-        round = document.getElementById("round");
-        var socket = io();
-        socket.emit("test","connection made!")
+            var socket = io();
+            socket.emit("test", "connection made!")
 
-        socket.on("game_state", function(state){
-            console.log("State recived")
-            updateUI(state)
-        })
+            socket.on("game_state", function (state) {
+                console.log("State recived")
+                updateUI(state)
+            })
 
-        function test(){
+            function test() {
 
-        }
-        function updateUI(state) {
-            // Updates the game ui with the info from the state
-
-            let p = document.createElement("p")
-            for (var child of parent.children){
-
-                p.innerText = state["playerHands"][child.id].toString()
             }
-        }
 
-        // Agent
+            function updateUI(state) {
+                // Updates the game ui with the info from the state
 
-        socket.on("uiAgent", function (data){
+                let p = document.createElement("p")
+                let parent = document.getElementById("parent")
+                for (var child of parent.children) {
 
-            console.log("handling uiAgent:", data["agentID"])
-        })
+                    p.innerText = state["playerHands"][child.id].toString()
+                }
+            }
 
+            // Agent
+            socket.on("uiAgentRequest", function (data) {
+                let request = data["request"];
+                let agentID = data["agentID"];
+                console.log("handling uiAgent:", agentID);
+                let action = agent_request(request, agentID);
+                socket.emit("uiAgentResponse", action)
+            })
 
-        function agent_request(type, id){
+            function agent_request(type, id) {
+                if (type !== "card2Play" && type !== "layCard") {
+                    let response = {"agentID": id, "response": "yes"}
+                    // gets the player div
+                    var yesBtn = document.get.createElement("button");
+                    var noBtn = document.get.createElement("button");
 
-            // gets the player div
-            var yesBtn = document.get.createElement("button");
-            var noBtn = document.get.createElement("button");
+                    yesBtn.textContent = "Ja";
+                    noBtn.textContent = "Nej";
+                    yesBtn.onclick = function () {
+                        return response
+                    }
 
-            yesBtn.textContent = "Ja";
-            noBtn.textContent = "Nej";
-            let infoDiv = document.getElementById(id).querySelector("div");
-            infoDiv.appendChild(yesBtn);
-            infoDiv.appendChild(noBtn);
+                    noBtn.onclick = function () {
+                        response["response"] = "no"
+                        return response;
+                    }
+                    let infoDiv = document.getElementById(id).querySelector("div");
+                    infoDiv.appendChild(yesBtn);
+                    infoDiv.appendChild(noBtn);
+                }
+            }
+        });
 
-        }
-        document.getElementById('startGameBtn').addEventListener('click', startGame());
-        document.getElementById('makeMoveBtn').addEventListener('click', makeMove);
 
     </script>
 </head>

@@ -34,7 +34,7 @@ def request_agent():
         if request.method == "POST":
             # data is {"agentID":, "request":}
             data = dict(request.form)
-            socketio.emit("uiAgent", data)
+            socketio.emit("uiAgentRequest", data)
             return {'status': 'success', 'message': 'POST request successful', 'data': data}
         return ""
 @socketio.on("test")
@@ -43,7 +43,7 @@ def test(data):
     return ""
 
 def run_app():
-    socketio.run(app=app, debug=True,host="0.0.0.0",port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app=app, debug=True,host="192.168.0.17",port=5000, allow_unsafe_werkzeug=True)
 
 # 192.168.0.17
 
