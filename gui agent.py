@@ -5,6 +5,7 @@ class GuiAgent:
     def __init__(self, agentID: int, apiUrl: str) -> None:
         self.agentID = agentID
         self.url = apiUrl + 'request_gui'
+        guiAgent = True
 
     def __hash__(self) -> int:
         return self.agentID
@@ -37,3 +38,8 @@ class GuiAgent:
     def post_request(self, payLoad):
         return requests.post(url=self.url, data=payLoad)
 
+
+
+
+f = GuiAgent(1,"")
+print(f.__dict__)

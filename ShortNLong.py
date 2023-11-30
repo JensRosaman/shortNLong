@@ -477,13 +477,16 @@ class Agent:
         pass        
     def request_take_discard(self, state:dict) -> bool:
         """Gets state of the game and returns ans"""
+
+    def request_lay_card(self):
+        """Requests an action asking what player to lay a card to"""
         
 
 # playerId är objekt för att repsentera den som ger instruktioner till spel modulen
 
 class Game:
     """Handles all the internal logic of the game"""
-    def __init__(self, playerIDS: list, guiActive = False) -> None:
+    def __init__(self, playerIDS: list, guiActive = False, appUrl = "http://192.168.0.17:5000/") -> None:
         self.numOfPlayers = len(playerIDS)
         self.playerIDs = playerIDS
         self.deck = None
@@ -494,6 +497,7 @@ class Game:
         self.currentPlayer = None
         self.declaredCards = {}
         self.guiActive = guiActive
+        self.appUrl = appUrl
         self.guiAgents = [agent.agentID for agent in self.playerIDs if "guiAgent" in agent.__dict__]
         
     def start_game(self):
@@ -517,15 +521,17 @@ class Game:
                     l.turn = self.round
                 # Gameplay loop for the diffrent rounds
                 notStopped = True
-                while notStopped: 
+                while notStopped: # Stopping occurs when a player finnishes their stick
                     for agentOfCurrentPlayer in self._playOrder: # i is the agent obj of the current player
                         self.currentPlayer = self.players[i] # indexs players after the id - gives the player object of the current player
                         self.currentPlayer.turn = True
                         current_player_index = self._playOrder.index(agentOfCurrentPlayer)
-                        
+
                         while True: # loops until no one picks from discard or the players whos turn it is picks a card
                             # -------------------checks if anyone wants to pick from discard
                             agentsRequests = {}
+                            self.send_state()
+
                             if len(self.discardDeck) <= 0:
                                 break # cant take from empty deck
                             for agent in self.players:
@@ -548,11 +554,14 @@ class Game:
                             else: # No agent picks from discard - proceed to their turn
                                 break
 
-                        # start of the turn of the current player - starts when picking up a card
 
+
+                        # start of the turn of the current player - starts when picking up a card
                         if not self.currentPlayer.takenCard:
                             self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
                             self.currentPlayer.takenCard = True
+                            self.send_state()
+
                         stateOfPlayer = self.get_current_state(i) # updates the current state for the current player
                         
                         # check if want to declaren
@@ -561,16 +570,18 @@ class Game:
                                 self.currentPlayer.declare_hand()
                                 self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
                                 print(f"{agentOfCurrentPlayer} deklarerar")
-                        if len(self.declaredCards) > 1:
+                                self.send_state()
+
+                        if len(self.declaredCards) > 1 and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer["sets"]) > 0): # check if i
                             agentOfCurrentPlayer.request_lay_cards()
-                        
+                            self.send_state()
+
                         # request what card to play n play it
                         cardToPlay = agentOfCurrentPlayer.request_card2Play(state=stateOfPlayer)
                         self.discardDeck.append(self.currentPlayer.hand[cardToPlay])
-                        if len(self.currentPlayer.hand) <= 0 and len(self.currentPlayer.declared) > 0:
-                            print(agentOfCurrentPlayer, " vann börjar nästa runda")
-                            continue
+                        self.send_state()
                         self.currentPlayer.takenCard = False
+                        # next round starting
 
     def _hand_out_cards(self, cardAmount):
         """Hands out cards to players and creates a playerlist, reset deck!!!"""
@@ -684,7 +695,7 @@ class Game:
         if not self.guiActive:
             return
 
-        url = "http://192.168.0.17:5000/game_state"
+        url = self.appUrl + "game_state"
         response = requests.post(url=url, data=self.get_game_state())
         if not response.ok:
             print(response.text)
