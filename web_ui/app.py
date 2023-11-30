@@ -32,6 +32,7 @@ def post_game_state():
 @app.route("/request_agent", methods = ["POST", "GET"])
 def request_agent():
         if request.method == "POST":
+            # data is {"agentID":, "request":}
             data = dict(request.form)
             socketio.emit("uiAgent", data)
             return {'status': 'success', 'message': 'POST request successful', 'data': data}
