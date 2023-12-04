@@ -33,7 +33,7 @@
 
             function updateUI(state) {
                 // Updates the game ui with the info from the state
-
+                console.log(`got the state : ${state.toString()}`)
                 let p = document.createElement("p")
                 let parent = document.getElementById("parent")
                 for (var child of parent.children) {
@@ -55,8 +55,8 @@
                 if (type !== "card2Play" && type !== "layCard") {
                     let response = {"agentID": id, "response": "yes"}
                     // gets the player div
-                    var yesBtn = document.get.createElement("button");
-                    var noBtn = document.get.createElement("button");
+                    var yesBtn = document.createElement("button");
+                    var noBtn = document.createElement("button");
 
                     yesBtn.textContent = "Ja";
                     noBtn.textContent = "Nej";

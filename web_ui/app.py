@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 from ShortNLong import Game, Agent
 import threading
 import secrets
-
+import asyncio
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 socketio = SocketIO(app)
@@ -32,11 +32,28 @@ def post_game_state():
 @app.route("/request_agent", methods = ["POST", "GET"])
 def request_agent():
         if request.method == "POST":
+
+            global agentResponse
+            agentResponse = None
             # data is {"agentID":, "request":}
             data = dict(request.form)
-            socketio.emit("uiAgentRequest", data)
-            return {'status': 'success', 'message': 'POST request successful', 'data': data}
+            socketio.emit("uiAgentRequest", data, callback=ui_agent_response)
+
+            socketio.start_background_task(target=wait_for_response)
+
+            return agentResponse
         return ""
+
+def wait_for_response():
+    global agentResponse
+    while agentResponse is None:
+         socketio.sleep(0.5)
+
+def ui_agent_response(ans):
+    global agentResponse
+    agentResponse = ans
+
+
 @socketio.on("test")
 def test(data):
     print(data)

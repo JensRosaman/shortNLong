@@ -1,6 +1,5 @@
 from ShortNLong import *
-
-
+from gui_agent import GuiAgent
 def d(lista):
     sets = {}
     for card in lista:
@@ -32,7 +31,8 @@ def start_game():
 
 def simulate_game():
 
-        bob = HumanAgent(1)
+        bob = GuiAgent(1)
+        #bob = HumanAgent(1)
         spel = Game([bob], guiActive=True) #spelareObj.__run_of_four__()
         spel.deck = Deck()
         spel._hand_out_cards(10)
@@ -47,6 +47,9 @@ def simulate_game():
 
 
 if __name__ == "__main__":
-    #start_game()
-    simulate_game()
-
+   # start_game()
+   # simulate_game()
+   bob = GuiAgent(1)
+   # bob = HumanAgent(1)
+   spel = Game([bob], guiActive=True)  # spelareObj.__run_of_four__()
+   spel.start_game()

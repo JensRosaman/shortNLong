@@ -29,14 +29,15 @@ class GuiAgent:
         """Asks for the index of the card to play -> index int of played card
         pass"""
         response = self.post_request(data={"agentID":self.agentID, "request":"request_card2Play"})
-
+        print(f"agent {self.agentID} respons with {response.text}")
+        return int(response)
 
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
         response = self.post_request(data={"agentID":self.agentID, "request":"request_take_discard"})
 
-    def post_request(self, payLoad):
-        return requests.post(url=self.url, data=payLoad)
+    def post_request(self, data):
+        return requests.post(url=self.url, data=data)
 
 
 

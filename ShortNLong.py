@@ -708,15 +708,14 @@ class Game:
 
     def get_game_state(self):
         """Creates an overarching game state that represents the whole game suitable for a flask implenetation"""
-        return {"bob": 3}
         state = {
             "playerHands" : {playerID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
             "currentPlayerID" : self.currentPlayer.id,
             "playOrder": self._playOrder,
             "round": self.round,
             "winConditions": self.current_win_conditions(),
-            "declaredCards":  {player.ID: self.declaredCard[player] for player in self.declaredCards},
-            "playerScores": {player.ID: player.get_score() for player in self.players},
+            "declaredCards":  {player.agentID: self.declaredCard[player] for player in self.declaredCards},
+            "playerScores": {player.agentID: self.players[player].get_score() for player in self.players},
             "guiAgents": self.guiAgents,
 
         }
