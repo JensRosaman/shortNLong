@@ -5,7 +5,7 @@ class GuiAgent:
     def __init__(self, agentID: int, apiUrl = "http://192.168.0.17:5000/") -> None:
         self.agentID = agentID
         self.url = apiUrl + 'request_agent'
-        guiAgent = True # game checks for guiAgent in __dict__
+        self.guiAgent = True # game checks for guiAgent in __dict__
 
     def __hash__(self) -> int:
         return self.agentID
@@ -35,9 +35,10 @@ class GuiAgent:
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
         response = self.post_request(data={"agentID":self.agentID, "request":"request_take_discard"})
-
+        return
     def post_request(self, data):
-        return requests.post(url=self.url, data=data)
+        print(f"{self.agentID}: sending a request to the front end {data}")
+        return requests.post(url=self.url, json=data)
 
 
 

@@ -2,7 +2,7 @@ import random
 import itertools
 import requests
 from typing import List
-
+import json
 
 
 
@@ -192,7 +192,19 @@ class Player:
         self.completedSets = []
 
     # ------------------------------------- Win conditions ----------------------------------------------------------
+    def __repr__(self):
+        return f"Player({repr(self.id)}, {repr(self.hand)})"
 
+    def __str__(self):
+        return f"Agent({self.id})"
+
+    def __hash__(self):
+        return self.id
+
+    def __eq__(self, other):
+        if isinstance(self,Player):
+            return self.id == other.id
+        return False
     def __3_of_a_kind__(self,getSets=True, getCount=False) -> None:
         """Gives the amount of 3 of a kinds in the instances hand"""
         rank_counts = {}
@@ -498,20 +510,20 @@ class Game:
         self.declaredCards = {}
         self.guiActive = guiActive
         self.appUrl = appUrl
-        self.guiAgents = [agent.agentID for agent in self.playerIDs if "guiAgent" in agent.__dict__]
+        self.guiAgents = [agent.agentID for agent in playerIDS if "guiAgent" in agent.__dict__]
         
     def start_game(self):
         """Starts the gameplay loop"""
         # assing value to players list and start first round
         self.deck = Deck()
         self._hand_out_cards(6)
-    
+        self._playOrder = list(self.players)
         # laying out starting cards
         self.discardDeck.append(self.deck.remove_card([self.deck.deck[-1]]))
         print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
 
         # start of gameplay loop
-        self._playOrder = list(self.players)
+
         gameLoop = True
         while gameLoop:
             # preparing the game for the next round
@@ -699,8 +711,13 @@ class Game:
         if not self.guiActive:
             return
 
+
         url = self.appUrl + "game_state"
-        response = requests.post(url=url, data=self.get_game_state())
+        state = self.get_game_state()
+
+        data = json.dumps(state)
+
+        response = requests.post(url=url, data=data, headers={'Content-Type': 'application/json'})
         if not response.ok:
             print(response.text)
             raise Exception("Bad post answer to app.py")
@@ -709,13 +726,13 @@ class Game:
     def get_game_state(self):
         """Creates an overarching game state that represents the whole game suitable for a flask implenetation"""
         state = {
-            "playerHands" : {playerID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
-            "currentPlayerID" : self.currentPlayer.id,
-            "playOrder": self._playOrder,
+            "playerHands" : {playerID.agentID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
+            "currentPlayer": self.currentPlayer.id.agentID,
+            "playOrder": [agent.agentID for agent in self._playOrder],
             "round": self.round,
             "winConditions": self.current_win_conditions(),
-            "declaredCards":  {player.agentID: self.declaredCard[player] for player in self.declaredCards},
-            "playerScores": {player.agentID: self.players[player].get_score() for player in self.players},
+            "declaredCards":  {agent.agentID: self.declaredCard[agent] for agent in self.declaredCards},
+            "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
             "guiAgents": self.guiAgents,
 
         }

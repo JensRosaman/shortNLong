@@ -15,8 +15,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <script type="text/javascript" charset="utf-8">
+        //    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js">
+
+
         document.addEventListener("DOMContentLoaded", function() {
-            console.log("Script started")
             round = document.getElementById("round");
 
             var socket = io();
@@ -33,25 +35,35 @@
 
             function updateUI(state) {
                 // Updates the game ui with the info from the state
-                console.log(`got the state : ${state.toString()}`)
-                let p = document.createElement("p")
+                console.log(`got the state : ${JSON.stringify(state)}`)
+
                 let parent = document.getElementById("parent")
                 for (var child of parent.children) {
-
-                    p.innerText = state["playerHands"][child.id].toString()
+                    let playerId = child.id;
+                    let playerHand = state["playerHands"][playerId];
+                    p = document.getElementById("hand" + playerId)
+                    // Set the text content of the paragraph to the player's hand array
+                    p.innerText ="Hand: " + playerHand.join();
                 }
             }
 
             // Agent
             socket.on("uiAgentRequest", function (data) {
+                console.log(JSON.stringify(data))
                 let request = data["request"];
                 let agentID = data["agentID"];
                 console.log("handling uiAgent:", agentID);
-                let action = agent_request(request, agentID);
-                socket.emit("uiAgentResponse", action)
+
+                agent_request(request, agentID, function(action) {
+                    console.log(`${agentID} svarar med ${action.response.toString()} skickar till servern"`);
+
+                    socket.emit("uiAgentResponse", JSON.stringify(action));
+                });
+
+
             })
 
-            function agent_request(type, id) {
+            function agent_request(type, id, callback) {
                 if (type !== "card2Play" && type !== "layCard") {
                     let response = {"agentID": id, "response": "yes"}
                     // gets the player div
@@ -61,12 +73,17 @@
                     yesBtn.textContent = "Ja";
                     noBtn.textContent = "Nej";
                     yesBtn.onclick = function () {
-                        return response
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
                     }
 
                     noBtn.onclick = function () {
                         response["response"] = "no"
-                        return response;
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
+
                     }
                     let infoDiv = document.getElementById(id).querySelector("div");
                     infoDiv.appendChild(yesBtn);
@@ -86,39 +103,35 @@
     <div id="1">
         <h1>p1</h1>
         <div>
-            <p>Hand:</p>
             <p id="hand1"></p>
         </div>
     </div>
     <div id="2">
         <h1>p2</h1>
         <div>
-            <p>Hand:</p>
             <p id="hand2"></p>
         </div>
     </div>
     <div id="3">
         <h1>p3</h1>
         <div>
-            <p>Hand:</p>
             <p id="hand3"></p>
         </div>
     </div>
     <div id="4">
         <h1>p4</h1>
         <div>
-            <p>Hand:</p>
             <p id="hand4"></p>
         </div>
     </div>
     <div id="5">
         <h1>p5</h1>
         <div>
-            <p>Hand:</p>
             <p id="hand5"></p>
         </div>
     </div>
 </div>
+
 
  <button type="button" onclick="test()">Start</button>
 </body>

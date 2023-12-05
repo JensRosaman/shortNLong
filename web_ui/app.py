@@ -1,9 +1,9 @@
 from flask import Flask, render_template, jsonify, request, session
 from flask_socketio import SocketIO
-from ShortNLong import Game, Agent
+
 import threading
 import secrets
-import asyncio
+
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 socketio = SocketIO(app)
@@ -16,7 +16,9 @@ def index():
 @app.route("/game_state", methods = ["POST","GET"] )
 def post_game_state():
     if request.method == "POST":
-        data = dict(request.form)
+        data = request.json
+        print(f"Sending the game state to the frontend:")
+
         session["data"] = data
         socketio.emit("game_state", data)
         return {'status': 'success', 'message': 'POST request successful', 'data': data}
@@ -36,11 +38,14 @@ def request_agent():
             global agentResponse
             agentResponse = None
             # data is {"agentID":, "request":}
-            data = dict(request.form)
-            socketio.emit("uiAgentRequest", data, callback=ui_agent_response)
 
-            socketio.start_background_task(target=wait_for_response)
+            socketio.emit("uiAgentRequest", request.json, callback=ui_agent_response)
 
+            # Start a new thread to run wait_for_response in the background
+            responseThread = threading.Thread(target=wait_for_response)
+            responseThread.start()
+            # Wait for the background thread to finish
+            responseThread.join()
             return agentResponse
         return ""
 

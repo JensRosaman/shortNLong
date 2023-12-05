@@ -25,10 +25,9 @@ def count_card_occurrences(listor):
 def start_game():
     spelare = [1, 2, 3, 4, 5]
     for i in spelare:
-        spelare[spelare.index(i)] = HumanAgent(i)
-    spel = Game(spelare)
+        spelare[spelare.index(i)] = GuiAgent(i)
+    spel = Game(playerIDS=spelare, guiActive=True)  # spelareObj.__run_of_four__()    spel.start_game()
     spel.start_game()
-
 def simulate_game():
 
         bob = GuiAgent(1)
@@ -49,7 +48,6 @@ def simulate_game():
 if __name__ == "__main__":
    # start_game()
    # simulate_game()
-   bob = GuiAgent(1)
    # bob = HumanAgent(1)
-   spel = Game([bob], guiActive=True)  # spelareObj.__run_of_four__()
-   spel.start_game()
+  start_game()
+
