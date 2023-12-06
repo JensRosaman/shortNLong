@@ -37,6 +37,11 @@
                 // Updates the game ui with the info from the state
                 console.log(`got the state : ${JSON.stringify(state)}`)
 
+                // updating the round counter
+                round.innerText = "Runda: " + state["round"].toString()
+
+
+                // updating player info
                 let parent = document.getElementById("parent")
                 for (var child of parent.children) {
                     let playerId = child.id;
@@ -64,6 +69,10 @@
             })
 
             function agent_request(type, id, callback) {
+                let infoDiv = document.getElementById(id).querySelector("div");
+                var ptag = document.createElement("p");
+                ptag.textContent = type + "?";
+                infoDiv.appendChild(ptag)
                 if (type !== "card2Play" && type !== "layCard") {
                     let response = {"agentID": id, "response": "yes"}
                     // gets the player div
@@ -76,6 +85,7 @@
                         callback(response);
                         yesBtn.remove();
                         noBtn.remove();
+                        ptag.remove();
                     }
 
                     noBtn.onclick = function () {
@@ -83,11 +93,15 @@
                         callback(response);
                         yesBtn.remove();
                         noBtn.remove();
+                        ptag.remove();
 
                     }
                     let infoDiv = document.getElementById(id).querySelector("div");
                     infoDiv.appendChild(yesBtn);
                     infoDiv.appendChild(noBtn);
+                }
+                else{
+
                 }
             }
         });
@@ -97,7 +111,7 @@
 </head>
 <body>
 <span>
-    <h1>Runda:</h1><h1 id="round"></h1>
+    <h1 id="round"></h1>
 </span>
 <div id="parent">
     <div id="1">

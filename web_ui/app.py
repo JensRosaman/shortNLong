@@ -45,6 +45,7 @@ def request_agent():
             responseThread.start()
             # Wait for the background thread to finish
             responseThread.join()
+            print("returning response", agentResponse)
             return agentResponse
         return ""
 
@@ -53,6 +54,8 @@ def wait_for_response():
     while agentResponse is None:
          socketio.sleep(0.5)
 
+
+@socketio.on(message="uiAgentResponse")
 def ui_agent_response(ans):
     global agentResponse
     agentResponse = ans
@@ -64,7 +67,7 @@ def test(data):
     return ""
 
 def run_app():
-    socketio.run(app=app, debug=True,host="0.0.0.0",port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app=app, debug=True,host="localhost",port=5000, allow_unsafe_werkzeug=True)
 
 # 192.168.0.17
 

@@ -416,84 +416,6 @@ class Player:
 
 # -------------------------------------------------------------------------------------------------------
 
-
-class HumanAgent:
-    def __init__(self, agentID:int) -> None:
-        self.human = True
-        self.agentID = agentID
-        self.isHuman = True
-
-    def __hash__(self) -> int:
-        return self.agentID
-    
-    def __repr__(self) -> str:
-        return f"HumanAgent({self.agentID})"
-    
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, Agent):
-            return self.agentID == other.agentID
-        return False
-    
-
-
-# -------------------- Agent requests
-    def request_declare(self, state:dict) -> bool:
-        """Returns bool if the agent wants to declare their cards"""
-        print(state)
-        ans = input(f"u wnna declare your cards? y/n p{self.agentID}")
-        if ans:
-            return True
-        else:
-            return False
-
-    def request_card2Play(self, state:dict) -> int:
-        "Asks for the index of the card to play -> index int of played card"
-        print(f"State: {state}")
-        ans = input(f"{self.agentID} Vilket kort vill du lägga (skriv index) {state['hand']}")
-        return int(ans)
-
-    def request_take_discard(self, state:dict) -> bool:
-        """Gets state of the game and returns ans"""
-        
-        if self.isHuman:
-            print(f"Current state is {state}")
-            ans = input(f"{self.agentID}Ta kortet från discard? any key for yes")
-            if ans:
-                return True
-
-
-            # -------------------------------------------------------------------------
-        
-class Agent:
-    """ serves as the template to create other agent classes of"""
-    def __init__(self, agentID:int) -> None:
-        self.agentID = agentID
-
-    def __hash__(self) -> int:
-        return self.agentID
-    
-    def __repr__(self) -> str:
-        return str(self.agentID)
-    
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, self.__class__):
-            return self.agentID == other.agentID
-        return False
-
-    def request_declare(self, state:dict) -> bool:
-        """Returns bool if the agent wants to declare their cards"""
-        pass
-
-    def request_card2Play(self, state:dict) -> int:
-        "Asks for the index of the card to play -> index int of played card"
-        pass        
-    def request_take_discard(self, state:dict) -> bool:
-        """Gets state of the game and returns ans"""
-
-    def request_lay_card(self):
-        """Requests an action asking what player to lay a card to"""
-        
-
 # playerId är objekt för att repsentera den som ger instruktioner till spel modulen
 
 class Game:
@@ -527,15 +449,16 @@ class Game:
         gameLoop = True
         while gameLoop:
             # preparing the game for the next round
+            # moves the previous first player to the back to simulate each player taking turn being the first player
+            if self.round > 0:
+                self._playOrder.append(self._playOrder.pop(0))
 
             # updating the turn of each of the players to update their internal logic
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
 
-            # moves the previous first player to the back to simulate each player taking turn being the first player
-            if self.round > 0:
-                self._playOrder.append(self._playOrder.pop(0))
+
 
             # Gameplay loop for the different rounds
             notStopped = True
@@ -552,7 +475,7 @@ class Game:
 
                         if len(self.discardDeck) <= 0:
                             break # cant take from empty deck
-                        for agent in self.players:
+                        for agent in self._playOrder:
                             state = self.get_current_state(playerId=agent)
                             useraction = agent.request_take_discard(state)
                             if useraction: # if the user wants to take the card
@@ -560,8 +483,8 @@ class Game:
 
                         if agentsRequests: # if an agent has requested to take from discard
                             # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
-                            # ask chatgpt cuz idfk
-                            agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]
+
+                            agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]# ask chatgpt cuz idfk
                             # if it isn't playerTopPicks turn - give penalty and loop again
                             if not (agentOfCurrentPlayer == agentToPick):
                                 # hands cards to the penalized player

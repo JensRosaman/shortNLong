@@ -1,5 +1,5 @@
 from ShortNLong import *
-from gui_agent import GuiAgent
+from agents import GuiAgent
 from web_ui.app import url_for , app , socketio
 def d(lista):
     sets = {}
@@ -10,7 +10,6 @@ def d(lista):
             sets[card] = 1
 
     return lista
-
 
 def count_card_occurrences(listor):
     card_counts = {}  # Initialize an empty dictionary to store card counts
@@ -24,11 +23,9 @@ def count_card_occurrences(listor):
     return card_counts
 
 def start_game():
-    server_address = socketio.server.eio.address
-    server_port = socketio.server.eio.port
-    url = f'http://{server_address}:{server_port}'
 
-    print(url)
+    url = f'http://localhost:5000/'
+
     spelare = [1, 2, 3, 4, 5]
     for i in spelare:
         spelare[spelare.index(i)] = GuiAgent(agentID=i,apiUrl=url)
