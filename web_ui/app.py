@@ -1,6 +1,5 @@
-from flask import Flask, render_template, jsonify, request, session
+from flask import Flask, render_template, jsonify, request, session, url_for
 from flask_socketio import SocketIO
-
 import threading
 import secrets
 
@@ -65,7 +64,7 @@ def test(data):
     return ""
 
 def run_app():
-    socketio.run(app=app, debug=True,host="192.168.0.17",port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app=app, debug=True,host="0.0.0.0",port=5000, allow_unsafe_werkzeug=True)
 
 # 192.168.0.17
 

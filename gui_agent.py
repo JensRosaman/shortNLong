@@ -43,5 +43,3 @@ class GuiAgent:
 
 
 
-f = GuiAgent(1,"")
-print(f.__dict__)
