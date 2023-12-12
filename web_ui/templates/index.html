@@ -71,9 +71,9 @@
                 let textContent = {
                     card2Play: "Index av kort att spela",
                     layCard: "ID av agent kort ska läggas på",
-                    take_discard: "Ta" + state["discard"][0].toString()
+                    take_discard: "Ta" + state["discardDeck"][0].toString()
                 }
-                ptag.textContent = type + "?";
+                ptag.textContent = textContent[type];
                 infoDiv.appendChild(ptag)
                 let response = {"agentID": id, "response": "yes"}
                 if (type !== "card2Play" && type !== "layCard") {

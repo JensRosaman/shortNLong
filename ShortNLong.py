@@ -151,13 +151,14 @@ class Deck:
         i - index to remove
         """
 
-        if cardsToRemove is not None:
+        if cardsToRemove is not None and not top:
             popped = []
             for item in cardsToRemove:
                 popped.append(self.deck.pop(self.deck.index(item)))
             return popped
         elif top:
             return self.deck.pop(-1)
+        raise Exception("wack remove_card")
 
     
     def hand_out_cards(self,playerAmount,cardAmount) -> list:
@@ -441,7 +442,7 @@ class Game:
         self._hand_out_cards(6)
         self._playOrder = list(self.players)
         # laying out starting cards
-        self.discardDeck.append(self.deck.remove_card([self.deck.deck[-1]]))
+        self.discardDeck.append(self.deck.remove_card(top=True))
         print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
 
         # start of gameplay loop
@@ -649,7 +650,8 @@ class Game:
         return
 
     def get_game_state(self):
-        """Creates an overarching game state that represents the whole game suitable for a flask implenetation"""
+        print(self.discardDeck)
+        """Creates an overarching game state that represents the whole game suitable for a flask implementation"""
         state = {
             "playerHands" : {playerID.agentID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
             "currentPlayer": self.currentPlayer.id.agentID,
@@ -659,6 +661,7 @@ class Game:
             "declaredCards":  {agent.agentID: self.declaredCard[agent] for agent in self.declaredCards},
             "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
             "guiAgents": self.guiAgents,
+            "discardDeck": [str(card) for card in self.discardDeck]
 
         }
         return state
