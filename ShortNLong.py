@@ -468,7 +468,7 @@ class Game:
                     self.currentPlayer.turn = True
                     current_player_index = self._playOrder.index(agentOfCurrentPlayer)
 
-                    while True: # loops until no one picks from discard or the players whose turn it is picks a card
+                    while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
                         agentsRequests = {}
                         self.send_state()
@@ -480,6 +480,7 @@ class Game:
                             useraction = agent.request_take_discard(state)
                             if useraction: # if the user wants to take the card
                                 agentsRequests[agent] = useraction
+                                break
 
                         if agentsRequests: # if an agent has requested to take from discard
                             # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
@@ -492,6 +493,7 @@ class Game:
                             elif agentOfCurrentPlayer == agentToPick:
                                 self.currentPlayer.add_card(self.discardDeck[-1])
                                 self.currentPlayer.takenCard = True
+
                         else: # No agent picks from discard - proceed to their turn
                             break
 

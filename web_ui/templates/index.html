@@ -22,18 +22,16 @@
             round = document.getElementById("round");
 
             var socket = io();
+            var state;
             socket.emit("test", "connection made!")
 
-            socket.on("game_state", function (state) {
+            socket.on("game_state", function (ans) {
                 console.log("State recived")
-                updateUI(state)
+                state = ans;
+                updateUI()
             })
 
-            function test() {
-
-            }
-
-            function updateUI(state) {
+            function updateUI() {
                 // Updates the game ui with the info from the state
                 console.log(`got the state : ${JSON.stringify(state)}`)
 
@@ -61,7 +59,6 @@
 
                 agent_request(request, agentID, function(action) {
                     console.log(`${agentID} svarar med ${action.response.toString()} skickar till servern"`);
-
                     socket.emit("uiAgentResponse", JSON.stringify(action));
                 });
 
@@ -71,10 +68,15 @@
             function agent_request(type, id, callback) {
                 let infoDiv = document.getElementById(id).querySelector("div");
                 var ptag = document.createElement("p");
+                let textContent = {
+                    card2Play: "Index av kort att spela",
+                    layCard: "ID av agent kort ska läggas på",
+                    take_discard: "Ta" + state["discard"][0].toString()
+                }
                 ptag.textContent = type + "?";
                 infoDiv.appendChild(ptag)
+                let response = {"agentID": id, "response": "yes"}
                 if (type !== "card2Play" && type !== "layCard") {
-                    let response = {"agentID": id, "response": "yes"}
                     // gets the player div
                     var yesBtn = document.createElement("button");
                     var noBtn = document.createElement("button");
@@ -100,8 +102,20 @@
                     infoDiv.appendChild(yesBtn);
                     infoDiv.appendChild(noBtn);
                 }
-                else{
-
+                else if(type === "card2Play"){
+                    let inputBox = document.createElement("input")
+                    inputBox.type = "text";
+                    let submitButton = document.createElement("button");
+                    submitButton.textContent = "submit";
+                    submitButton.onclick = function () {
+                        response["response"] = inputBox.value;
+                        callback(response)
+                        submitButton.remove();
+                        inputBox.remove();
+                        ptag.remove();
+                    }
+                    infoDiv.appendChild(inputBox);
+                    infoDiv.appendChild(submitButton);
                 }
             }
         });
@@ -147,6 +161,5 @@
 </div>
 
 
- <button type="button" onclick="test()">Start</button>
 </body>
 </html>
