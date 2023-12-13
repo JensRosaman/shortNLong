@@ -2,7 +2,6 @@
 <html lang="se">
 <head>
     <title>Coolt spel</title>
-   <!-- <script src="{{ url_for('static', filename='index.js') }}"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
@@ -15,15 +14,78 @@
     <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <script type="text/javascript" charset="utf-8">
-        //    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js">
 
 
         document.addEventListener("DOMContentLoaded", function() {
             round = document.getElementById("round");
-
+            discardElement = document.getElementById("discardImg")
             var socket = io();
             var state;
             socket.emit("test", "connection made!")
+
+           var imgLinks = {
+                // Spades
+                "Ace of Spades": "{{ url_for('static', filename='cards/ace_of_spades.svg') }}",
+                "Two of Spades": "{{ url_for('static', filename='cards/2_of_spades.svg') }}",
+                "Three of Spades": "{{ url_for('static', filename='cards/3_of_spades.svg') }}",
+                "Four of Spades": "{{ url_for('static', filename='cards/4_of_spades.svg') }}",
+                "Five of Spades": "{{ url_for('static', filename='cards/5_of_spades.svg') }}",
+                "Six of Spades": "{{ url_for('static', filename='cards/6_of_spades.svg') }}",
+                "Seven of Spades": "{{ url_for('static', filename='cards/7_of_spades.svg') }}",
+                "Eight of Spades": "{{ url_for('static', filename='cards/8_of_spades.svg') }}",
+                "Nine of Spades": "{{ url_for('static', filename='cards/9_of_spades.svg') }}",
+                "Ten of Spades": "{{ url_for('static', filename='cards/10_of_spades.svg') }}",
+                "Jack of Spades": "{{ url_for('static', filename='cards/jack_of_spades.svg') }}",
+                "Queen of Spades": "{{ url_for('static', filename='cards/queen_of_spades.svg') }}",
+                "King of Spades": "{{ url_for('static', filename='cards/king_of_spades.svg') }}",
+
+                // Hearts
+                "Ace of Hearts": "{{ url_for('static', filename='cards/ace_of_hearts.svg') }}",
+                "Two of Hearts": "{{ url_for('static', filename='cards/2_of_hearts.svg') }}",
+                "Three of Hearts": "{{ url_for('static', filename='cards/3_of_hearts.svg') }}",
+                "Four of Hearts": "{{ url_for('static', filename='cards/4_of_hearts.svg') }}",
+                "Five of Hearts": "{{ url_for('static', filename='cards/5_of_hearts.svg') }}",
+                "Six of Hearts": "{{ url_for('static', filename='cards/6_of_hearts.svg') }}",
+                "Seven of Hearts": "{{ url_for('static', filename='cards/7_of_hearts.svg') }}",
+                "Eight of Hearts": "{{ url_for('static', filename='cards/8_of_hearts.svg') }}",
+                "Nine of Hearts": "{{ url_for('static', filename='cards/9_of_hearts.svg') }}",
+                "Ten of Hearts": "{{ url_for('static', filename='cards/10_of_hearts.svg') }}",
+                "Jack of Hearts": "{{ url_for('static', filename='cards/jack_of_hearts.svg') }}",
+                "Queen of Hearts": "{{ url_for('static', filename='cards/queen_of_hearts.svg') }}",
+                "King of Hearts": "{{ url_for('static', filename='cards/king_of_hearts.svg') }}",
+
+                // Diamonds
+                "Ace of Diamonds": "{{ url_for('static', filename='cards/ace_of_diamonds.svg') }}",
+                "Two of Diamonds": "{{ url_for('static', filename='cards/2_of_diamonds.svg') }}",
+                "Three of Diamonds": "{{ url_for('static', filename='cards/3_of_diamonds.svg') }}",
+                "Four of Diamonds": "{{ url_for('static', filename='cards/4_of_diamonds.svg') }}",
+                "Five of Diamonds": "{{ url_for('static', filename='cards/5_of_diamonds.svg') }}",
+                "Six of Diamonds": "{{ url_for('static', filename='cards/6_of_diamonds.svg') }}",
+                "Seven of Diamonds": "{{ url_for('static', filename='cards/7_of_diamonds.svg') }}",
+                "Eight of Diamonds": "{{ url_for('static', filename='cards/8_of_diamonds.svg') }}",
+                "Nine of Diamonds": "{{ url_for('static', filename='cards/9_of_diamonds.svg') }}",
+                "Ten of Diamonds": "{{ url_for('static', filename='cards/10_of_diamonds.svg') }}",
+                "Jack of Diamonds": "{{ url_for('static', filename='cards/jack_of_diamonds.svg') }}",
+                "Queen of Diamonds": "{{ url_for('static', filename='cards/queen_of_diamonds.svg') }}",
+                "King of Diamonds": "{{ url_for('static', filename='cards/king_of_diamonds.svg') }}",
+
+                // Clubs
+                "Ace of Clubs": "{{ url_for('static', filename='cards/ace_of_clubs.svg') }}",
+                "Two of Clubs": "{{ url_for('static', filename='cards/2_of_clubs.svg') }}",
+                "Three of Clubs": "{{ url_for('static', filename='cards/3_of_clubs.svg') }}",
+                "Four of Clubs": "{{ url_for('static', filename='cards/4_of_clubs.svg') }}",
+                "Five of Clubs": "{{ url_for('static', filename='cards/5_of_clubs.svg') }}",
+                "Six of Clubs": "{{ url_for('static', filename='cards/6_of_clubs.svg') }}",
+                "Seven of Clubs": "{{ url_for('static', filename='cards/7_of_clubs.svg') }}",
+                "Eight of Clubs": "{{ url_for('static', filename='cards/8_of_clubs.svg') }}",
+                "Nine of Clubs": "{{ url_for('static', filename='cards/9_of_clubs.svg') }}",
+                "Ten of Clubs": "{{ url_for('static', filename='cards/10_of_clubs.svg') }}",
+                "Jack of Clubs": "{{ url_for('static', filename='cards/jack_of_clubs.svg') }}",
+                "Queen of Clubs": "{{ url_for('static', filename='cards/queen_of_clubs.svg') }}",
+                "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs.svg') }}"
+            };
+
+
 
             socket.on("game_state", function (ans) {
                 console.log("State recived")
@@ -38,6 +100,8 @@
                 // updating the round counter
                 round.innerText = "Runda: " + state["round"].toString()
 
+                //update discard
+                if(state["discardDeck"].length > 0){discardElement.setAttribute("src",imgLinks[state["discardDeck"][0]]);}
 
                 // updating player info
                 let parent = document.getElementById("parent")
@@ -93,6 +157,12 @@
                         ptag.remove();
                     }
 
+                    discardElement.onclick = function () {
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
+                        ptag.remove();
+                    }
                     noBtn.onclick = function () {
                         response["response"] = "no"
                         callback(response);
@@ -164,6 +234,7 @@
             <p id="hand5"></p>
         </div>
     </div>
+    <img src="" id="discardImg">
 </div>
 
 

@@ -1,8 +1,9 @@
 import numpy as np
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.optimizers import Adam
+from tensorflow.python.keras.optimizers import adam_v2 as Adam
 import random
+from agents import Agent
 class DQNAgent(Agent):
     def __init__(self, agentID: int) -> None:
         super().__init__(agentID)

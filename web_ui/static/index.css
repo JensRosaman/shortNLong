@@ -1,5 +1,5 @@
 body{
-    background-color: aqua;
+    background-color: dimgrey;
 }
 
 #parent {
@@ -19,7 +19,7 @@ body{
 
 /* Optional: Add some styling to make it visually appealing */
 #parent > div {
-    background-color: #f0f0f0;
+    background-color: darkgrey;
     border: 1px solid #ccc;
     padding: 20px;
     text-align: center;

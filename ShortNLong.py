@@ -97,10 +97,10 @@ class Card:
             self._point_value = 10 
             self._rank_value = 0xd
         else:
-             raise Exception('Invalid rank code %s', r)
+            raise Exception('Invalid rank code %s', r)
 
     def __str__(self):
-          return self._rank + ' of ' + self._suit
+        return self._rank + ' of ' + self._suit
     
     def __repr__(self):
         return "Card(%s)" % repr(self._code)
@@ -129,8 +129,8 @@ class Deck:
     def __init__(self) -> None:
 
         # creates the deck where each item is a card object
-        self._create_deck_() # declares self.deck
-        self.completeDeck = self.deck # saves for later
+        self._create_deck_()  # declares self.deck
+        self.completeDeck = self.deck  # saves for later
         # creates played card deck and plays a starting card
         self.init_new_round()
 
@@ -471,7 +471,7 @@ class Game:
                     self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
                     self.currentPlayer.turn = True
                     current_player_index = self._playOrder.index(agentOfCurrentPlayer)
-
+                    agentToPick = None
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
 
@@ -614,6 +614,7 @@ class Game:
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information avalible to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
+        """
         self.state = {
             "discard": self.discardDeck,#list[card]
             "round": self.round,#int
@@ -631,6 +632,26 @@ class Game:
             "completeSets": requestingPlayer.completedSets, #list[Card]
             "completeRuns": requestingPlayer.completedRuns, # list[Card]
             "declaredCards": {player.ID: self.declaredCard[player] for player in self.declaredCards},
+        }
+        """
+        self.state = {
+            "discard": [str(card) for card in self.discardDeck],  # list[str]
+            "round": self.round,  # int
+            "winConditions": self.current_win_conditions(),  # dict
+            "playOrder": [agent.agentID for agent in self._playOrder],
+            "currentPlayer": self.currentPlayer,  # player
+            "isCurrentPlayer": self.currentPlayer == requestingPlayer,  # bool
+            "hand": requestingPlayer.hand,  # list[Card]
+            "winner": False,  # bool
+            "currentScore": requestingPlayer.get_score(),  # int
+            "takenCard": requestingPlayer.takenCard,  # bool
+            "hasCompleteHand": requestingPlayer.__complete_hand__(),  # bool
+            "runCount": requestingPlayer.run_count,  # int
+            "setCount": requestingPlayer.set_count,  # int
+            "completeSets": [str(card) for card in requestingPlayer.completedSets],  # list[str]
+            "completeRuns": [str(card) for card in requestingPlayer.completedRuns],  # list[str]
+            "declaredCards":  {agent.agentID: self.declaredCards[agent] for agent in self.declaredCards},
+            "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
 
         }
         return self.state
@@ -640,13 +661,9 @@ class Game:
         # no gui active return nothing
         if not self.guiActive:
             return
-
-
         url = self.appUrl + "game_state"
         state = self.get_game_state()
-
         data = json.dumps(state)
-
         response = requests.post(url=url, data=data, headers={'Content-Type': 'application/json'})
         if not response.ok:
             print(response.text)
@@ -661,14 +678,13 @@ class Game:
             "playOrder": [agent.agentID for agent in self._playOrder],
             "round": self.round,
             "winConditions": self.current_win_conditions(),
-            "declaredCards":  {agent.agentID: self.declaredCard[agent] for agent in self.declaredCards},
+            "declaredCards":  {agent.agentID: self.declaredCards[agent] for agent in self.declaredCards},
             "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
             "guiAgents": self.guiAgents,
             "discardDeck": [str(card) for card in self.discardDeck]
 
         }
         return state
-
 
 
 
