@@ -71,7 +71,10 @@
                 let textContent = {
                     card2Play: "Index av kort att spela",
                     layCard: "ID av agent kort ska läggas på",
-                    take_discard: "Ta" + state["discardDeck"][0].toString()
+                    take_discard: "Discard är tom, tryck nej "
+                }
+                if (state["discardDeck"] && state["discardDeck"].length > 0){
+                    textContent["take_discard"] = "ta " + state["discardDeck"][0].toString()
                 }
                 ptag.textContent = textContent[type];
                 infoDiv.appendChild(ptag)

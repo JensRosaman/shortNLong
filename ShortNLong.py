@@ -650,7 +650,6 @@ class Game:
         return
 
     def get_game_state(self):
-        print(self.discardDeck)
         """Creates an overarching game state that represents the whole game suitable for a flask implementation"""
         state = {
             "playerHands" : {playerID.agentID: [str(card) for card in self.players[playerID].hand] for playerID in self.playerIDs},
