@@ -112,6 +112,9 @@
                     submitButton.textContent = "submit";
                     submitButton.onclick = function () {
                         response["response"] = inputBox.value;
+                        if (parseInt(inputBox.value) > state["playerHands"][id].length){
+                            return
+                        }
                         callback(response)
                         submitButton.remove();
                         inputBox.remove();

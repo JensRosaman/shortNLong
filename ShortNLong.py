@@ -114,6 +114,9 @@ class Card:
     def __eq__(self, other):
         """Compares two diffrent instance cards"""
         if isinstance(other, Card):
+            if id(self) == id(other):
+                print("Card object is compared to itself")
+                return False
             return (self._rank_value, self._suit_value) == (other._rank_value, other._suit_value)
         else:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
@@ -126,7 +129,7 @@ class Deck:
     def __init__(self) -> None:
 
         # creates the deck where each item is a card object
-        self._create_deck_()
+        self._create_deck_() # declares self.deck
         self.completeDeck = self.deck # saves for later
         # creates played card deck and plays a starting card
         self.init_new_round()
@@ -471,39 +474,40 @@ class Game:
 
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
-                        agentsRequests = {}
+
                         self.send_state()
 
                         if len(self.discardDeck) <= 0:
                             break # cant take from empty deck
-                        for agent in self._playOrder:
+
+                        askingOrder = self._playOrder[current_player_index:] + self._playOrder[:current_player_index]
+                        for agent in askingOrder:
                             state = self.get_current_state(playerId=agent)
-                            useraction = agent.request_take_discard(state)
-                            if useraction: # if the user wants to take the card
-                                agentsRequests[agent] = useraction
+
+                            if agent.request_take_discard(state): # if the user wants to take the card
+                                agentToPick = agent
                                 break
+                            else:
+                                agentToPick = None
 
-                        if agentsRequests: # if an agent has requested to take from discard
-                            # Sort the players in agentsRequests based on their proximity to the current player and get the first next in line player
-
-                            agentToPick = sorted(agentsRequests.keys(), key=lambda player: (self._playOrder.index(player) - current_player_index) % self.numOfPlayers)[0]# ask chatgpt cuz idfk
-                            # if it isn't playerTopPicks turn - give penalty and loop again
-                            if not (agentOfCurrentPlayer == agentToPick):
-                                # hands cards to the penalized player
-                                self._take_discard(self.players[agentToPick])
-                            elif agentOfCurrentPlayer == agentToPick:
-                                self.currentPlayer.add_card(self.discardDeck[-1])
-                                self.currentPlayer.takenCard = True
-
-                        else: # No agent picks from discard - proceed to their turn
+                        if agentToPick is None:# No agent picks from discard - proceed to their turn
                             break
+                        # if it isn't playerTopPicks turn - give penalty and loop again
+                        elif not (agentOfCurrentPlayer == agentToPick):
+                            # hands cards to the penalized player
+                            self._take_discard(self.players[agentToPick])
+
+                        elif agentOfCurrentPlayer == agentToPick:
+                            self.currentPlayer.add_card(self.discardDeck[-1])
+                            self.currentPlayer.takenCard = True
+                            self.discardDeck.pop(-1)
 
                     # start of the turn of the current player - starts when picking up a card
                     if not self.currentPlayer.takenCard:
                         self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
                         self.currentPlayer.takenCard = True
-                        self.send_state()
 
+                    self.send_state()
                     stateOfPlayer = self.get_current_state(agentOfCurrentPlayer) # updates the current state for the current player
 
                     # check if we want to declare
@@ -520,8 +524,8 @@ class Game:
 
                     # request what card to play n play it
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=stateOfPlayer)
-                    self.discardDeck.append(self.currentPlayer.hand[cardToPlay])
-                    self.send_state()
+                    self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
+
                     self.currentPlayer.takenCard = False
                     # next round starting
 
