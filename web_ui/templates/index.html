@@ -125,8 +125,6 @@
                     console.log(`${agentID} svarar med ${action.response.toString()} skickar till servern"`);
                     socket.emit("uiAgentResponse", JSON.stringify(action));
                 });
-
-
             })
 
             function agent_request(type, id, callback) {
