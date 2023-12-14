@@ -12,6 +12,10 @@ app.static_folder = 'static'
 @app.route('/')
 def index():
     return render_template("index.html")
+
+@app.route("/hiddenUI/<agentID>")
+def hidden_ui(agentID):
+    return render_template("hiddenUI.html", agentID=agentID)
 @app.route("/game_state", methods = ["POST","GET"] )
 def post_game_state():
     if request.method == "POST":
@@ -52,7 +56,7 @@ def request_agent():
 def wait_for_response():
     global agentResponse
     while agentResponse is None:
-         socketio.sleep(0.5)
+        1 +3
 
 
 @socketio.on(message="uiAgentResponse")

@@ -15,10 +15,108 @@
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <script type="text/javascript" charset="utf-8">
         document.addEventListener("DOMContentLoaded", function() {
+            var round = document.getElementById("round");
+            var discardElement = document.getElementById("discardImg")
+            var parent = document.getElementById("parent")
+            const infoBox = document.getElementById("infoBox")
+            const playerID = parseInt("{{ agentID }}");
+            var socket = io();
             var state;
+            socket.emit("test", "connection made!")
+
+            var imgLinks = {
+                // Spades
+                "Ace of Spades": "{{ url_for('static', filename='cards/ace_of_spades.svg') }}",
+                "Two of Spades": "{{ url_for('static', filename='cards/2_of_spades.svg') }}",
+                "Three of Spades": "{{ url_for('static', filename='cards/3_of_spades.svg') }}",
+                "Four of Spades": "{{ url_for('static', filename='cards/4_of_spades.svg') }}",
+                "Five of Spades": "{{ url_for('static', filename='cards/5_of_spades.svg') }}",
+                "Six of Spades": "{{ url_for('static', filename='cards/6_of_spades.svg') }}",
+                "Seven of Spades": "{{ url_for('static', filename='cards/7_of_spades.svg') }}",
+                "Eight of Spades": "{{ url_for('static', filename='cards/8_of_spades.svg') }}",
+                "Nine of Spades": "{{ url_for('static', filename='cards/9_of_spades.svg') }}",
+                "Ten of Spades": "{{ url_for('static', filename='cards/10_of_spades.svg') }}",
+                "Jack of Spades": "{{ url_for('static', filename='cards/jack_of_spades.svg') }}",
+                "Queen of Spades": "{{ url_for('static', filename='cards/queen_of_spades.svg') }}",
+                "King of Spades": "{{ url_for('static', filename='cards/king_of_spades.svg') }}",
+
+                // Hearts
+                "Ace of Hearts": "{{ url_for('static', filename='cards/ace_of_hearts.svg') }}",
+                "Two of Hearts": "{{ url_for('static', filename='cards/2_of_hearts.svg') }}",
+                "Three of Hearts": "{{ url_for('static', filename='cards/3_of_hearts.svg') }}",
+                "Four of Hearts": "{{ url_for('static', filename='cards/4_of_hearts.svg') }}",
+                "Five of Hearts": "{{ url_for('static', filename='cards/5_of_hearts.svg') }}",
+                "Six of Hearts": "{{ url_for('static', filename='cards/6_of_hearts.svg') }}",
+                "Seven of Hearts": "{{ url_for('static', filename='cards/7_of_hearts.svg') }}",
+                "Eight of Hearts": "{{ url_for('static', filename='cards/8_of_hearts.svg') }}",
+                "Nine of Hearts": "{{ url_for('static', filename='cards/9_of_hearts.svg') }}",
+                "Ten of Hearts": "{{ url_for('static', filename='cards/10_of_hearts.svg') }}",
+                "Jack of Hearts": "{{ url_for('static', filename='cards/jack_of_hearts.svg') }}",
+                "Queen of Hearts": "{{ url_for('static', filename='cards/queen_of_hearts.svg') }}",
+                "King of Hearts": "{{ url_for('static', filename='cards/king_of_hearts.svg') }}",
+                // Diamonds
+                "Ace of Diamonds": "{{ url_for('static', filename='cards/ace_of_diamonds.svg') }}",
+                "Two of Diamonds": "{{ url_for('static', filename='cards/2_of_diamonds.svg') }}",
+                "Three of Diamonds": "{{ url_for('static', filename='cards/3_of_diamonds.svg') }}",
+                "Four of Diamonds": "{{ url_for('static', filename='cards/4_of_diamonds.svg') }}",
+                "Five of Diamonds": "{{ url_for('static', filename='cards/5_of_diamonds.svg') }}",
+                "Six of Diamonds": "{{ url_for('static', filename='cards/6_of_diamonds.svg') }}",
+                "Seven of Diamonds": "{{ url_for('static', filename='cards/7_of_diamonds.svg') }}",
+                "Eight of Diamonds": "{{ url_for('static', filename='cards/8_of_diamonds.svg') }}",
+                "Nine of Diamonds": "{{ url_for('static', filename='cards/9_of_diamonds.svg') }}",
+                "Ten of Diamonds": "{{ url_for('static', filename='cards/10_of_diamonds.svg') }}",
+                "Jack of Diamonds": "{{ url_for('static', filename='cards/jack_of_diamonds.svg') }}",
+                "Queen of Diamonds": "{{ url_for('static', filename='cards/queen_of_diamonds.svg') }}",
+                "King of Diamonds": "{{ url_for('static', filename='cards/king_of_diamonds.svg') }}",
+                // Clubs
+                "Ace of Clubs": "{{ url_for('static', filename='cards/ace_of_clubs.svg') }}",
+                "Two of Clubs": "{{ url_for('static', filename='cards/2_of_clubs.svg') }}",
+                "Three of Clubs": "{{ url_for('static', filename='cards/3_of_clubs.svg') }}",
+                "Four of Clubs": "{{ url_for('static', filename='cards/4_of_clubs.svg') }}",
+                "Five of Clubs": "{{ url_for('static', filename='cards/5_of_clubs.svg') }}",
+                "Six of Clubs": "{{ url_for('static', filename='cards/6_of_clubs.svg') }}",
+                "Seven of Clubs": "{{ url_for('static', filename='cards/7_of_clubs.svg') }}",
+                "Eight of Clubs": "{{ url_for('static', filename='cards/8_of_clubs.svg') }}",
+                "Nine of Clubs": "{{ url_for('static', filename='cards/9_of_clubs.svg') }}",
+                "Ten of Clubs": "{{ url_for('static', filename='cards/10_of_clubs.svg') }}",
+                "Jack of Clubs": "{{ url_for('static', filename='cards/jack_of_clubs.svg') }}",
+                "Queen of Clubs": "{{ url_for('static', filename='cards/queen_of_clubs.svg') }}",
+                "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs.svg') }}"
+            };
 
 
-        })
+
+
+             socket.on("game_state", function (ans) {
+                    console.log("State recived")
+                    state = ans;
+                    updateUI()
+             });
+            function updateUI() {
+                // Updates the game ui with the info from the state
+                console.log(`got the state : ${JSON.stringify(state)}`)
+                // updating the round counter
+                round.innerText = "Runda: " + state["round"].toString()
+
+                //update discard
+                if (state["discardDeck"].length > 0) {
+                    discardElement.setAttribute("src", imgLinks[state["discardDeck"][0]]);
+                }
+
+                // updating hand
+                var hand = document.createElement("div")
+                infoBox.appendChild(hand)
+                let playerHand = state["playerHands"][playerID];
+                for (const card of playerHand) {
+                    let img = document.createElement("img")
+                    img.src = imgLinks[card]
+                    hand.appendChild(img)
+                }
+
+                // Set the text content of the paragraph to the player's hand array
+                p.innerText = "Hand: " + playerHand.join();
+            }
+        });
     </script>
 </head>
 <body>
@@ -28,10 +126,10 @@
     <div id="parent">
             <div id="deckDaddy">
                 <img src="" id="discardImg" alt="">
-                <img id="deckImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Card_back_01.svg/1200px-Card_back_01.svg.png">
+                <img id="deckImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Card_back_01.svg/1200px-Card_back_01.svg.png" draggable="false">
             </div>
         <div id="infoBox">
-
+            <span id="hand"></span>
         </div>
         <div id="otherPlayers">
         </div>

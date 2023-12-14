@@ -1,5 +1,5 @@
 import requests
-
+import random
 
 class Agent:
     """ serves as the template to create other agent classes of"""
@@ -132,4 +132,35 @@ class GuiAgent:
 
 
 
+class randAgent:
+    """ serves as the template to create other agent classes of"""
 
+    def __init__(self, agentID: int) -> None:
+        self.agentID = agentID
+
+    def __hash__(self) -> int:
+        return self.agentID
+
+    def __repr__(self) -> str:
+        return str(self.agentID)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.agentID == other.agentID
+        return False
+
+    def request_declare(self, state: dict) -> bool:
+        """Returns bool if the agent wants to declare their cards"""
+        return True
+
+    def request_card2Play(self, state: dict) -> int:
+        "Asks for the index of the card to play -> index int of played card"
+        cardAmount = len(state["hand"])
+        return random.randint(0,cardAmount - 1)
+
+    def request_take_discard(self, state: dict) -> bool:
+        """Gets state of the game and returns ans"""
+        return bool(random.randint(0, 1))
+    def request_lay_card(self):
+        """Requests an action asking what player to lay a card to"""
+        return bool(random.randint(0, 1))

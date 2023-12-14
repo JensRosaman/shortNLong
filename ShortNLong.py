@@ -498,6 +498,8 @@ class Game:
                             self._take_discard(self.players[agentToPick])
 
                         elif agentOfCurrentPlayer == agentToPick:
+                            if self.currentPlayer.takenCard: # if player already have picked a card from discard then a penalty folows
+                                self.currentPlayer.add_card(self.deck.remove_card(top=True))
                             self.currentPlayer.add_card(self.discardDeck[-1])
                             self.currentPlayer.takenCard = True
                             self.discardDeck.pop(-1)

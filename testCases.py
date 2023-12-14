@@ -1,5 +1,5 @@
 from ShortNLong import *
-from agents import GuiAgent
+from agents import GuiAgent, randAgent
 from web_ui.app import url_for , app , socketio
 def d(lista):
     sets = {}
@@ -28,6 +28,9 @@ def start_game():
 
     spelare = [1, 2, 3, 4, 5]
     for i in spelare:
+        if i == 2:
+            spelare[spelare.index(i)] = randAgent(agentID=i)
+            continue
         spelare[spelare.index(i)] = GuiAgent(agentID=i,apiUrl=url)
 
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)  # spelareObj.__run_of_four__()    spel.start_game()
