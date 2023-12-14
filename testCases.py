@@ -48,7 +48,6 @@ def simulate_game():
         #print(trissar)
 
 
-
 if __name__ == "__main__":
    # start_game()
    # simulate_game()
