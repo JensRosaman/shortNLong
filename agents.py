@@ -29,12 +29,13 @@ class Agent:
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
 
-    def request_lay_card(self):
+    def request_lay_cards(self):
         """Requests an action asking what player to lay a card to"""
 
 
 
 class HumanAgent:
+    """Agent that takes input from the command line"""
     def __init__(self, agentID: int) -> None:
         self.human = True
         self.agentID = agentID
@@ -107,7 +108,7 @@ class GuiAgent:
 
     def request_declare(self, state: dict) -> bool:
         """Returns bool if the agent wants to declare their cards"""
-        response = self._return_bool(self.post_request(data={"agentID":self.agentID, "request":"declare"}))
+        response = self._return_bool(self.post_request(data={"agentID": self.agentID, "request":"declare"}))
         return response
 
     def request_card2Play(self, state: dict) -> int:
@@ -121,9 +122,9 @@ class GuiAgent:
         response = self._return_bool(self.post_request(data={"agentID":self.agentID, "request":"take_discard"}))
         return response
 
-    def request_lay_card(self):
+    def request_lay_cards(self):
         """Requests an action asking what player to lay a card to"""
-        response = self._return_int(self.post_request(data={"agentID":self.agentID, "request":"lay_card"}))
+        response = self._return_int(self.post_request(data={"agentID":self.agentID, "request":"lay_cards"}))
 
         return response
     def post_request(self, data):
@@ -161,6 +162,6 @@ class randAgent:
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
         return bool(random.randint(0, 1))
-    def request_lay_card(self):
+    def request_lay_cards(self,state):
         """Requests an action asking what player to lay a card to"""
-        return bool(random.randint(0, 1))
+        #avalibleToLayTo = state[]
