@@ -1,16 +1,18 @@
 import numpy as np
-from tensorflow.python.keras.models import Sequential
+from tensorflow.python.keras.models import Sequential, load_model
 from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.optimizers import adam_v2 as Adam
+from keras.optimizers import Adam
 import random
-from agents import Agent
-class DQNAgent(Agent):
+import pandas as pd
+from datetime import datetime
+class DQNAgent:
     def __init__(self, agentID: int) -> None:
-        super().__init__(agentID)
+        self.agentID = agentID
+
 
         # Define DQN parameters
-        self.state_size =  0  # Define the size of the state space
-        self.action_size =  ...  # Define the size of the action space
+        self.state_size =  18  # Define the size of the state space
+        self.action_size = 2  # Define the size of the action space
         self.memory = []  # Use this to store experiences for experience replay
         self.gamma = 0.95  # Discount factor
         self.epsilon = 1.0  # Exploration-exploitation trade-off
@@ -52,10 +54,22 @@ class DQNAgent(Agent):
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+    def save_model(self, file_path=None):
+        if file_path is None:
+            file_path = fr"saved_models/{self.agentID} {datetime.now()}"
+        # Save the model to a file
+        self.model.save(file_path)
+
+    def load_model(self, file_path):
+        # Load the model from a file
+        self.model = load_model(file_path)
+
     def request_declare(self, state: dict) -> bool:
         # For example, if the model predicts declaring with a probability greater than 0.5
         return self.model.predict(self.preprocess_state(state))[0][0] > 0.5
 
+    def request_lay_cards(self,state) -> int:
+        return self.act(self.preprocess_state(state))
     def request_card2Play(self, state: dict) -> int:
         # Implement your logic for choosing a card to play using DQN
         return self.act(self.preprocess_state(state))
@@ -67,8 +81,9 @@ class DQNAgent(Agent):
 
     def preprocess_state(self, state: dict) -> np.ndarray:
         # Implement state preprocessing if needed
-        # Convert the state dictionary to a suitable input format for the neural network
-        
+        # To Convert the state dictionary to a suitable input format for the neural network
+
+        return pd.DataFrame(state,index=[0]).to_numpy()
         # You may need to scale/normalize values and convert categorical variables
-        pass
+
 
