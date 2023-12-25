@@ -1,0 +1,16 @@
+body{
+    background-color: dimgrey;
+}
+
+#deckImg{
+    width: 250px ;
+    height: 350px;
+}
+
+
+#deckDaddy{
+    display: flex;
+    flex-direction: row;
+    wrap-option: nowrap;
+    background-image: url("table.png") ;
+}

@@ -105,6 +105,7 @@
 
                 // updating hand
                 var hand = document.createElement("div")
+                hand.replaceChildren()
                 infoBox.appendChild(hand)
                 let playerHand = state["playerHands"][playerID];
                 for (const card of playerHand) {

@@ -643,7 +643,7 @@ class Game:
         self.start_game()
             
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
-        """Collects all the current game information avalible to the player"""
+        """Collects all the current game information available to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         """
         self.state = {
@@ -683,7 +683,7 @@ class Game:
             "completeRuns": [str(card) for card in requestingPlayer.completedRuns],  # list[str]
             "declaredCards":  {agent.agentID: self.declaredCards[agent] for agent in self.declaredCards},
             "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
-            "avalibleToLayTo": self.can_lay_card_to_player(requestingPlayer)
+            "availableToLayTo": self.can_lay_card_to_player(requestingPlayer)
         }
         return self.state
 
