@@ -203,13 +203,14 @@ class Player:
         return f"Agent({self.id})"
 
     def __hash__(self):
-        return self.id
+        return int(self.id.agentID)
 
     def __eq__(self, other):
-        if isinstance(self,Player):
+        if isinstance(other,Player):
             return self.id == other.id
         return False
-    def __3_of_a_kind__(self,getSets=True, getCount=False) -> None:
+
+    def __3_of_a_kind__(self,getSets=True, getCount=False):
         """Gives the amount of 3 of a kinds in the instances hand"""
         rank_counts = {}
         cards_by_rank = {}  # A dictionary to store cards for each rank
@@ -449,12 +450,13 @@ class Game:
         self.guiActive = guiActive
         self.appUrl = appUrl
         self.guiAgents = [agent.agentID for agent in playerIDS if "guiAgent" in agent.__dict__]
+        self.playerScores = {}
         
     def start_game(self):
         """Starts the gameplay loop"""
         # assing value to players list and start first round
+        cardsToHandOut = 6 # cards to hand out every round
         self.deck = Deck()
-        self._hand_out_cards(6)
         self._playOrder = list(self.players)
         # laying out starting cards
         self.discardDeck.append(self.deck.remove_card(top=True))
@@ -464,17 +466,32 @@ class Game:
 
         gameLoop = True
         while gameLoop:
+            if self.round >= 4:
+                print("Game over!")
+                break
+
+
+
             # preparing the game for the next round
+
+            if len(self.playerScores) == 0:
+                self.playerScores = {agent: 0 for agent in self._playOrder}
+            else:
+                for agent in self._playOrder:
+                    self.playerScores[agent] += self.calculate_points(player=self.players[agent])
             # moves the previous first player to the back to simulate each player taking turn being the first player
-            if self.round > 0:
+            if self.round > 1:
                 self._playOrder.append(self._playOrder.pop(0))
+
+
+            self.deck = Deck()
+            self._hand_out_cards(cardsToHandOut)
+            cardsToHandOut += 1
 
             # updating the turn of each of the players to update their internal logic
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
-
-
 
             # Gameplay loop for the different rounds
             notStopped = True
@@ -537,7 +554,7 @@ class Game:
                         self.send_state()
 
                     # request what card to play n play it
-                    cardToPlay = agentOfCurrentPlayer.request_card2Play(state=stateOfPlayer)
+                    cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
                     self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
 
                     self.currentPlayer.takenCard = False
@@ -551,6 +568,9 @@ class Game:
         for hand in cardsToGive:
             self.players[self.playerIDs[i]] = Player(player_id=self.playerIDs[i], cards=hand)
             i += 1
+        for agent, player in self.players.items():
+            player.hand = cardsToGive[i]
+            i += 1
 
 
     def _calculate_penalty(self, positionInStack:int, player:Player):
@@ -559,7 +579,7 @@ class Game:
         cardsOnTop = self.deck.deck[negIndex:]
         penaltyCards = len(cardsOnTop)
 
-        # if its the players turn avoid extra cards
+        # if it's the players turn avoid extra cards
         if player.turn:
            return penaltyCards - 1
         else:
@@ -581,28 +601,24 @@ class Game:
 
     def can_lay_card_to_player(self,playerToCheck):
         """Checks all the declared cards on the table and gives if the given player can lay a card there """
-        validLays = {
-
-        }
+        validLays = {agent.agentID:{"runs":[],"sets":[]} for agent in self.declaredCards}
 
         for agent in self.declaredCards:
             player = self.players[agent]
-            validLays["runs"] = []
-            validLays["sets"] = []
             for card in playerToCheck.hand:
-                if player.valid_in_run():
+                if player.valid_in_declared_run(card):
                     validLays[player]["runs"].append(card)
-                if player.valid_in_set():
+                if player.valid_in_declared_set(card):
                     validLays[player]["sets"].append(card)
 
-        return
+        return {ID: {"runs": [],"sets": []} for ID in validLays if (len(validLays[ID]["runs"]) > 0 or len(validLays[ID]["sets"]) > 0)}
+
     def current_win_conditions(self):
         """Sets the current win conditions depending on the round"""
         winConditions = {"sets": None, "runs": None}
         if self.round == 1:
             winConditions['sets'] = 2
 
-                
         elif self.round == 2:
             winConditions["sets"] = 1 
             winConditions['runs'] = 1

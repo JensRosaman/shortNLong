@@ -24,3 +24,8 @@ body{
     padding: 20px;
     text-align: center;
 }
+
+.cardInHand{
+    width: 62px ;
+    height: 87px ;
+}

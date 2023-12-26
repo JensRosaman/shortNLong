@@ -19,6 +19,8 @@
             var discardElement = document.getElementById("discardImg")
             var parent = document.getElementById("parent")
             const infoBox = document.getElementById("infoBox")
+            const hand = document.getElementById("hand")
+            const otherPlayers = document.getElementById("otherPlayers")
             const playerID = parseInt("{{ agentID }}");
             var socket = io();
             var state;
@@ -104,18 +106,21 @@
                 }
 
                 // updating hand
-                var hand = document.createElement("div")
-                hand.replaceChildren()
-                infoBox.appendChild(hand)
+                hand.replaceChildren();
+
                 let playerHand = state["playerHands"][playerID];
                 for (const card of playerHand) {
-                    let img = document.createElement("img")
-                    img.src = imgLinks[card]
-                    hand.appendChild(img)
+                    let img = document.createElement("img");
+                    img.src = imgLinks[card];
+                    img.classList.add("cardInHand");
+                    hand.appendChild(img);
                 }
-
-                // Set the text content of the paragraph to the player's hand array
-                p.innerText = "Hand: " + playerHand.join();
+                updateOtherPlayerInfo();
+            }
+            function updateOtherPlayerInfo(){
+                for (const div of otherPlayers.children) {
+                    div.childNodes[0].textContent = state["playerHands"][div.id].length.toString();
+                }
             }
         });
     </script>
@@ -129,12 +134,27 @@
                 <img src="" id="discardImg" alt="">
                 <img id="deckImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Card_back_01.svg/1200px-Card_back_01.svg.png" draggable="false">
             </div>
-        <div id="infoBox">
-            <span id="hand"></span>
+        <h>Kort:</h>
+        <div id="hand">
+
         </div>
         <div id="otherPlayers">
+            <div id="div1">1</div>
+            <div id="div2">2</div>
+            <div id="div3">3</div>
+            <div id="div4">4</div>
+            <div id="div5">5</div>
         </div>
     </div>
+    <div id="declaredCards">
+        runs:
+        <div id="runs">
 
+        </div>
+        sets:
+        <div id="sets">
+
+        </div>
+    </div>
 </body>
 </html>

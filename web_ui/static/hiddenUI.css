@@ -5,12 +5,36 @@ body{
 #deckImg{
     width: 250px ;
     height: 350px;
+
 }
-
-
+#parent{
+    display: flex;
+    flex-direction: row;
+}
 #deckDaddy{
     display: flex;
     flex-direction: row;
     wrap-option: nowrap;
     background-image: url("table.png") ;
+    width: fit-content;
+}
+
+.cardInHand{
+    width: 62px ;
+    height: 87px ;
+}
+
+#hand{
+    width: 25vw;
+    height: 25vw;
+    background-image:url("https://pngimg.com/d/hands_PNG98525.png");
+    background-size: cover;
+}
+
+#otherPlayers > div{
+    background-color: aliceblue;
+    display: flex;
+    flex-direction: row;
+    width: fit-content;
+    height: fit-content;
 }
