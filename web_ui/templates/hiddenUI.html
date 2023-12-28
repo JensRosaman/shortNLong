@@ -24,7 +24,7 @@
             const playerID = parseInt("{{ agentID }}");
             var socket = io();
             var state;
-            socket.emit("test", "connection made!")
+            socket.emit("test", "socket connected!")
 
             var imgLinks = {
                 // Spades
@@ -119,7 +119,7 @@
             }
             function updateOtherPlayerInfo(){
                 for (const div of otherPlayers.children) {
-                    div.childNodes[0].textContent = state["playerHands"][div.id].length.toString();
+                    div.childNodes[1].textContent = state["playerHands"][div.id].length.toString();
                 }
             }
         });
@@ -139,11 +139,24 @@
 
         </div>
         <div id="otherPlayers">
-            <div id="div1">1</div>
-            <div id="div2">2</div>
-            <div id="div3">3</div>
-            <div id="div4">4</div>
-            <div id="div5">5</div>
+            <div id="1">
+                cardCount:
+                <p></p>
+            </div>
+
+            <div id="2">
+
+            </div>
+            <div id="3">
+                cardCount:
+                <p></p>
+            </div>
+            <div id="4">cardCount:
+                <p></p>
+            </div>
+            <div id="5">cardCount:
+                <p></p>
+            </div>
         </div>
     </div>
     <div id="declaredCards">

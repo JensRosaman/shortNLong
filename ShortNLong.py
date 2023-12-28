@@ -115,8 +115,8 @@ class Card:
         """Compares two diffrent instance cards"""
         if isinstance(other, Card):
             if id(self) == id(other):
-                print("Card object is compared to itself")
-                return False
+                raise Exception("Card object is compared to itself")
+                #return False
             return (self._rank_value, self._suit_value) == (other._rank_value, other._suit_value)
         else:
             raise TypeError("Cannot compare Card to unknown type %s" % other.__class__)
@@ -405,13 +405,18 @@ class Player:
     def valid_in_declared_run(self,card:Card) -> bool:
         """Checks if the given Card is valid to add in a declared run"""
         for run in self.declared["runs"]:
-            if (
-                ((card._rank_value == run[-1]._rank_value + 1) and run[-1]._rank_value != 1) or
-                (card._rank_value == run[0]._rank_value - 1)):
-
+            if self.valid_in_run(card=card,run=run):
                 return True
-        else:
-            return False
+
+        return False
+
+    def valid_in_run(self,card,run):
+        if ((
+                ((card._rank_value == run[-1]._rank_value + 1) and run[-1]._rank_value != 1) or
+                    (card._rank_value == run[0]._rank_value - 1)) or
+                    (((card._rank_value == 1) and (run[-1]._rank_value == 13)))):
+            return True
+        return False
 
     def valid_in_declared_set(self,card) -> bool:
         """Checks if the given Card is valid to add in a declared set"""
@@ -420,6 +425,31 @@ class Player:
                 return True
         else:
             return False
+
+    def lay_card_to_declared(self,card,layToRun) -> dict:
+        if layToRun:
+            for run in self.declared["runs"]:
+                if ((card._rank_value == run[-1]._rank_value + 1) and (run[-1]._rank_value != 1) or# lay to end of run
+                        (card._rank_value == 1) and (run[-1]._rank_value == 13)):
+                    run.append(card)
+                    return self.declared
+
+                elif card._rank_value == run[0]._rank_value - 1: # beginning of run
+                    run.insert(0, card)
+                    return self.declared
+        for set in self.declared["sets"]:
+            if set[0]._rank_value == card._rank_value:
+                set.append(card)
+                return self.declared
+        else:
+            raise Exception("lay card was called but there were no playes to lay to")
+
+
+
+
+
+
+
 
     def start_new_round(self, round, cards):
         """Starts a new round by reseting all values"""
@@ -451,40 +481,37 @@ class Game:
         self.appUrl = appUrl
         self.guiAgents = [agent.agentID for agent in playerIDS if "guiAgent" in agent.__dict__]
         self.playerScores = {}
-        
+        self.layMap = {}
     def start_game(self):
         """Starts the gameplay loop"""
         # assing value to players list and start first round
         cardsToHandOut = 6 # cards to hand out every round
-        self.deck = Deck()
-        self._playOrder = list(self.players)
-        # laying out starting cards
-        self.discardDeck.append(self.deck.remove_card(top=True))
-        print(f"Game started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
-
+        self.layMap = {}
         # start of gameplay loop
-
         gameLoop = True
         while gameLoop:
+
             if self.round >= 4:
                 print("Game over!")
                 break
 
-
-
             # preparing the game for the next round
 
             if len(self.playerScores) == 0:
-                self.playerScores = {agent: 0 for agent in self._playOrder}
+                self.playerScores = {agent: 0 for agent in self.playerIDs}
             else:
-                for agent in self._playOrder:
+                for agent in self.playerIDs:
                     self.playerScores[agent] += self.calculate_points(player=self.players[agent])
             # moves the previous first player to the back to simulate each player taking turn being the first player
             if self.round > 1:
                 self._playOrder.append(self._playOrder.pop(0))
-
-
+            else:
+                for agent in self.playerIDs: # creating player instances
+                    self.players[agent] = Player(player_id=agent, cards=[])
+                self._playOrder = list(self.players)
+            # laying out starting cards
             self.deck = Deck()
+            self.discardDeck.append(self.deck.remove_card(top=True))
             self._hand_out_cards(cardsToHandOut)
             cardsToHandOut += 1
 
@@ -492,15 +519,18 @@ class Game:
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
-
+            print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
             # Gameplay loop for the different rounds
             notStopped = True
             while notStopped: # Stopping occurs when a player finishes their stick
-                for agentOfCurrentPlayer in self._playOrder: # I am the agent obj of the current player
+                #  print("loop started")
+                for agentOfCurrentPlayer in self._playOrder: # I am the agent obj of the current player mainloop
+
                     self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
                     self.currentPlayer.turn = True
                     current_player_index = self._playOrder.index(agentOfCurrentPlayer)
                     agentToPick = None
+                    self.layMap = self.available_to_lay_cards_to()
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
 
@@ -550,8 +580,16 @@ class Game:
                             self.send_state()
 
                     if (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0): # check if i
-                        agentOfCurrentPlayer.request_lay_cards()
-                        self.send_state()
+                       # avalibleLays = self.can_lay_card_to_player(self.currentPlayer)
+
+                        layChoice = agentOfCurrentPlayer.request_lay_cards(state) # (agentID , "runOrSet")
+                        while len(self.can_lay_card_to_player(self.currentPlayer)) > 0:
+                           # agentToLayTo = self.players[hash(layChoice["agentToLayTo"])]
+                            self.lay_cards(
+                                agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"], layToRun=layChoice["layToRun"]
+                            )
+                            layChoice = agentOfCurrentPlayer.request_lay_cards(state)
+                            self.send_state()
 
                     # request what card to play n play it
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
@@ -565,9 +603,7 @@ class Game:
         cardsToGive = self.deck.hand_out_cards(playerAmount=self.numOfPlayers, cardAmount=cardAmount)
         # creating index to iterate through the players
         i = 0
-        for hand in cardsToGive:
-            self.players[self.playerIDs[i]] = Player(player_id=self.playerIDs[i], cards=hand)
-            i += 1
+
         for agent, player in self.players.items():
             player.hand = cardsToGive[i]
             i += 1
@@ -601,17 +637,35 @@ class Game:
 
     def can_lay_card_to_player(self,playerToCheck):
         """Checks all the declared cards on the table and gives if the given player can lay a card there """
-        validLays = {agent.agentID:{"runs":[],"sets":[]} for agent in self.declaredCards}
+        validLays = {agent:{"runs":[],"sets":[]} for agent in self.declaredCards}
 
         for agent in self.declaredCards:
             player = self.players[agent]
             for card in playerToCheck.hand:
                 if player.valid_in_declared_run(card):
-                    validLays[player]["runs"].append(card)
+                    validLays[agent]["runs"].append(card)
                 if player.valid_in_declared_set(card):
-                    validLays[player]["sets"].append(card)
+                    validLays[agent]["sets"].append(card)
 
-        return {ID: {"runs": [],"sets": []} for ID in validLays if (len(validLays[ID]["runs"]) > 0 or len(validLays[ID]["sets"]) > 0)}
+        return {agent: {"runs": [card for card in validLays[agent]["runs"]],"sets": [card for card in validLays[agent]["sets"] ]} for agent in validLays if (len(validLays[agent]["runs"]) > 0 or len(validLays[agent]["sets"]) > 0)}
+    def available_to_lay_cards_to(self):
+        """Creates a dict with each agent and the players it can lay cards to
+        Return agentThatCanLay:{agentThatItcanLayTo:"runs":[],"sets":[]}
+        """
+        possible_lays = {
+            #agent.agentID: #agent:{"runs":[],"sets":[]}} for agent in self.declaredCards
+        }
+        for agent in self.declaredCards:
+            player = self.players[agent]
+            possible_lays[agent] = self.can_lay_card_to_player(player)
+
+        return possible_lays
+
+    def lay_cards(self,agentToLayTo,layToRun:bool,playerLaying:Player,cardToLay:Card):
+        """Removes the available card and lays it to a declared run/set"""
+        playerToLayTo = self.players[agentToLayTo]
+        self.declaredCards[agentToLayTo] = playerToLayTo.lay_card_to_declared(card=cardToLay,layToRun=layToRun)
+        playerLaying.hand.remove(cardToLay)
 
     def current_win_conditions(self):
         """Sets the current win conditions depending on the round"""
@@ -661,6 +715,7 @@ class Game:
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information available to the player"""
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
+        availableToLayTo = self.can_lay_card_to_player(requestingPlayer)
         """
         self.state = {
             "discard": self.discardDeck,#list[card]
@@ -699,7 +754,7 @@ class Game:
             "completeRuns": [str(card) for card in requestingPlayer.completedRuns],  # list[str]
             "declaredCards":  {agent.agentID: self.declaredCards[agent] for agent in self.declaredCards},
             "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
-            "availableToLayTo": self.can_lay_card_to_player(requestingPlayer)
+            "availableToLayTo": availableToLayTo #{agent.agentID: {"runs": str([availableToLayTo[agent]["runs"]]),"sets": str([availableToLayTo[agent]["sets"]])} for agent in availableToLayTo}
         }
         return self.state
 

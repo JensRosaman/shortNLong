@@ -164,4 +164,16 @@ class randAgent:
         return bool(random.randint(0, 1))
     def request_lay_cards(self,state):
         """Requests an action asking what player to lay a card to"""
-        #avalibleToLayTo = state[]
+        availableToLayTo = state["availableToLayTo"]
+        chosenAgent = random.choice(list(availableToLayTo))
+        if len(availableToLayTo[chosenAgent]["runs"]) > 0 and len(availableToLayTo[chosenAgent]["sets"]) > 0:
+            layToRun = bool(random.randint(0,1))
+        elif len(availableToLayTo[chosenAgent]["runs"]) > 0:
+            layToRun = True
+        else:
+            layToRun = False
+
+        # return the first card in the sets list or the runs list
+        if layToRun:
+            return {"layToRun": layToRun, "agentToLayTo": chosenAgent, "cardToLay": availableToLayTo[chosenAgent]["runs"][0]}
+        return {"layToRun": layToRun, "agentToLayTo": chosenAgent, "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
