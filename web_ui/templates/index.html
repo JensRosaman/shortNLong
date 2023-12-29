@@ -102,7 +102,7 @@
 
                 //update discard
                 if(state["discardDeck"].length > 0){discardElement.setAttribute("src",imgLinks[state["discardDeck"][0]]);}
-
+                else {discardElement.setAttribute("src","")}
                 // updating player info
                 let parent = document.getElementById("parent")
                 for (var child of parent.children) {
@@ -110,13 +110,17 @@
                     let playerHand = state["playerHands"][playerId];
                     let handDiv = document.getElementById("hand" + playerId)
                     // Set the text content of the paragraph to the player's hand array
-
-                    handDiv.replaceChildren()
-                    for (const card of playerHand) {
-                        let img = document.createElement("img")
-                        img.src = imgLinks[card]
-                        img.classList.add("cardInHand")
-                        handDiv.appendChild(img)
+                    if(handDiv){
+                         handDiv.replaceChildren()
+                        for (const card of playerHand) {
+                            let img = document.createElement("img")
+                            img.src = imgLinks[card]
+                            img.classList.add("cardInHand")
+                            handDiv.appendChild(img)
+                        }
+                    }
+                    if(playerId === state["currentPlayer"]){
+                        child.style.backgroundColor = "red"
                     }
                 }
             }
@@ -210,29 +214,32 @@
 </span>
 <div id="parent">
     <div id="1">
-    <h1>p1</h1>
-    <div id="hand1">
+        <h1>p1</h1>
+        <div id="hand1">
+        </div>
+        <div id="declared1">
+
+        </div>
     </div>
-</div>
-<div id="2">
-    <h1>p2</h1>
-    <div id="hand2">
+    <div id="2">
+        <h1>p2</h1>
+        <div id="hand2">
+        </div>
     </div>
-</div>
-<div id="3">
-    <h1>p3</h1>
-    <div id="hand3">
+    <div id="3">
+        <h1>p3</h1>
+        <div id="hand3">
+        </div>
     </div>
-</div>
-<div id="4">
-    <h1>p4</h1>
-    <div id="hand4">
+    <div id="4">
+        <h1>p4</h1>
+        <div id="hand4">
+        </div>
     </div>
-</div>
-<div id="5">
-    <h1>p5</h1>
-    <div id="hand5">
-    </div>
+    <div id="5">
+        <h1>p5</h1>
+        <div id="hand5">
+        </div>
 </div>
     <img src="" id="discardImg">
 </div>

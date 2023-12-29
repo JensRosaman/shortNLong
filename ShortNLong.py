@@ -364,9 +364,6 @@ class Player:
         self.__3_of_a_kind__()
         sets = self.completedSets
 
-        self.__3_of_a_kind__()
-
-        print(f"player {self.id} declares with {self.completedSets}")
         if self.round == 1:
             # two 3's
             for i in range(2):
@@ -399,7 +396,7 @@ class Player:
                 self.declared["sets"].append(sets[i])
                 for card in sets[i]:
                     self.remove_id(cardToRemove=card)
-        
+        print(f"player {self.id} declares with {self.declared}")
         return self.declared
 
     def valid_in_declared_run(self,card:Card) -> bool:
@@ -411,7 +408,8 @@ class Player:
         return False
 
     def valid_in_run(self,card,run):
-        if ((
+        if (run[0]._suit == card._suit and
+                (
                 ((card._rank_value == run[-1]._rank_value + 1) and run[-1]._rank_value != 1) or
                     (card._rank_value == run[0]._rank_value - 1)) or
                     (((card._rank_value == 1) and (run[-1]._rank_value == 13)))):
@@ -421,7 +419,7 @@ class Player:
     def valid_in_declared_set(self,card) -> bool:
         """Checks if the given Card is valid to add in a declared set"""
         for set in self.declared["sets"]:
-            if set[0]._rank:
+            if set[0]._rank == card._rank:
                 return True
         else:
             return False
@@ -441,8 +439,8 @@ class Player:
             if set[0]._rank_value == card._rank_value:
                 set.append(card)
                 return self.declared
-        else:
-            raise Exception("lay card was called but there were no playes to lay to")
+
+        raise Exception("lay card was called but there were no playes to lay to")
 
 
 
@@ -564,7 +562,7 @@ class Game:
                             self.discardDeck.pop(-1)
 
                     # start of the turn of the current player - starts when picking up a card
-                    if not self.currentPlayer.takenCard:
+                    if not self.currentPlayer.takenCard and len(self.deck.deck) > 0:
                         self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
                         self.currentPlayer.takenCard = True
 
@@ -572,25 +570,26 @@ class Game:
                     stateOfPlayer = self.get_current_state(agentOfCurrentPlayer) # updates the current state for the current player
 
                     # check if we want to declare
-                    if self.currentPlayer.__complete_hand__():
+                    if self.currentPlayer.__complete_hand__() and not (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0):
                         if agentOfCurrentPlayer.request_declare(stateOfPlayer):
                             self.currentPlayer.declare_hand()
                             self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
                             print(f"{agentOfCurrentPlayer} deklarerar")
                             self.send_state()
 
-                    if (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0): # check if i
+                    elif (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0): # check if i
                        # avalibleLays = self.can_lay_card_to_player(self.currentPlayer)
-
-                        layChoice = agentOfCurrentPlayer.request_lay_cards(state) # (agentID , "runOrSet")
-                        while len(self.can_lay_card_to_player(self.currentPlayer)) > 0:
-                           # agentToLayTo = self.players[hash(layChoice["agentToLayTo"])]
+                        availableLays = self.can_lay_card_to_player(self.currentPlayer)
+                        while len(availableLays) > 0:
+                            # agentToLayTo = self.players[hash(layChoice["agentToLayTo"])]
+                            print(availableLays)
+                            layChoice = agentOfCurrentPlayer.request_lay_cards(state)  # (agentID
+                            print(f"laychoice for  is ",layChoice)
                             self.lay_cards(
-                                agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"], layToRun=layChoice["layToRun"]
+                                agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"], layToRun=layChoice["layToRun"], playerLaying=self.currentPlayer
                             )
-                            layChoice = agentOfCurrentPlayer.request_lay_cards(state)
+                            availableLays = self.can_lay_card_to_player(self.currentPlayer)
                             self.send_state()
-
                     # request what card to play n play it
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
                     self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
@@ -661,7 +660,7 @@ class Game:
 
         return possible_lays
 
-    def lay_cards(self,agentToLayTo,layToRun:bool,playerLaying:Player,cardToLay:Card):
+    def lay_cards(self,agentToLayTo,layToRun: bool, playerLaying: Player, cardToLay: Card):
         """Removes the available card and lays it to a declared run/set"""
         playerToLayTo = self.players[agentToLayTo]
         self.declaredCards[agentToLayTo] = playerToLayTo.lay_card_to_declared(card=cardToLay,layToRun=layToRun)
@@ -682,6 +681,10 @@ class Game:
 
         elif self.round == 4:
             winConditions["sets"] = 3
+        elif self.round == 5:
+            winConditions["sets"] = 2
+            winConditions["runs"] = 1
+
         else:
             raise Exception("No valid round inputed")
         return winConditions

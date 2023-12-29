@@ -16,12 +16,25 @@ body{
     flex-direction: row;
     wrap-option: nowrap;
     background-image: url("table.png") ;
-    width: fit-content;
+    background-size: cover;
+    background-repeat: no-repeat;
+    width: 35vw;
+}
+
+#deckDaddy > img{
+    width: 50%;
+    height: 90%;
+    margin: 5%;
 }
 
 .cardInHand{
     width: 62px ;
     height: 87px ;
+}
+
+.declaredCards{
+    width: 31px;
+    height: 43px;
 }
 
 #hand{

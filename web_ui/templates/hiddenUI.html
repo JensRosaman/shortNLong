@@ -22,6 +22,8 @@
             const hand = document.getElementById("hand")
             const otherPlayers = document.getElementById("otherPlayers")
             const playerID = parseInt("{{ agentID }}");
+            const runs = document.getElementById("runs")
+            const sets = document.getElementById("sets")
             var socket = io();
             var state;
             socket.emit("test", "socket connected!")
@@ -90,13 +92,12 @@
 
 
              socket.on("game_state", function (ans) {
-                    console.log("State recived")
                     state = ans;
+                    console.log(`got the state : ${JSON.stringify(state)}`)
                     updateUI()
              });
             function updateUI() {
                 // Updates the game ui with the info from the state
-                console.log(`got the state : ${JSON.stringify(state)}`)
                 // updating the round counter
                 round.innerText = "Runda: " + state["round"].toString()
 
@@ -104,10 +105,10 @@
                 if (state["discardDeck"].length > 0) {
                     discardElement.setAttribute("src", imgLinks[state["discardDeck"][0]]);
                 }
+                else {discardElement.setAttribute("src","")}
 
                 // updating hand
                 hand.replaceChildren();
-
                 let playerHand = state["playerHands"][playerID];
                 for (const card of playerHand) {
                     let img = document.createElement("img");
@@ -116,7 +117,29 @@
                     hand.appendChild(img);
                 }
                 updateOtherPlayerInfo();
+                if (state["declaredCards"][playerID] != null){
+                    updateDeclaredCards();
+                }
             }
+            function updateDeclaredCards(){
+                const declaredRuns = state["declaredCards"][playerID]["runs"];
+                runs.replaceChildren();
+                for (const card of declaredRuns) {
+                    let img = document.createElement("img");
+                    img.src = imgLinks[card];
+                    img.classList.add("declaredCards");
+                    runs.appendChild(img);
+                }
+                sets.replaceChildren();
+                const declaredSets = state["declaredCards"][playerID]["sets"];
+                for (const card of declaredSets) {
+                    let img = document.createElement("img");
+                    img.src = imgLinks[card];
+                    img.classList.add("declaredCards");
+                    sets.appendChild(img);
+                }
+            }
+
             function updateOtherPlayerInfo(){
                 for (const div of otherPlayers.children) {
                     div.childNodes[1].textContent = state["playerHands"][div.id].length.toString();
@@ -145,7 +168,8 @@
             </div>
 
             <div id="2">
-
+                cardCount:
+                 <p></p>
             </div>
             <div id="3">
                 cardCount:
