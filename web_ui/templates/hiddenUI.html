@@ -40,9 +40,9 @@
                 "Eight of Spades": "{{ url_for('static', filename='cards/8_of_spades.svg') }}",
                 "Nine of Spades": "{{ url_for('static', filename='cards/9_of_spades.svg') }}",
                 "Ten of Spades": "{{ url_for('static', filename='cards/10_of_spades.svg') }}",
-                "Jack of Spades": "{{ url_for('static', filename='cards/jack_of_spades.svg') }}",
-                "Queen of Spades": "{{ url_for('static', filename='cards/queen_of_spades.svg') }}",
-                "King of Spades": "{{ url_for('static', filename='cards/king_of_spades.svg') }}",
+                "Jack of Spades": "{{ url_for('static', filename='cards/jack_of_spades2.svg') }}",
+                "Queen of Spades": "{{ url_for('static', filename='cards/queen_of_spades2.svg') }}",
+                "King of Spades": "{{ url_for('static', filename='cards/king_of_spades2.svg') }}",
 
                 // Hearts
                 "Ace of Hearts": "{{ url_for('static', filename='cards/ace_of_hearts.svg') }}",
@@ -55,9 +55,10 @@
                 "Eight of Hearts": "{{ url_for('static', filename='cards/8_of_hearts.svg') }}",
                 "Nine of Hearts": "{{ url_for('static', filename='cards/9_of_hearts.svg') }}",
                 "Ten of Hearts": "{{ url_for('static', filename='cards/10_of_hearts.svg') }}",
-                "Jack of Hearts": "{{ url_for('static', filename='cards/jack_of_hearts.svg') }}",
-                "Queen of Hearts": "{{ url_for('static', filename='cards/queen_of_hearts.svg') }}",
-                "King of Hearts": "{{ url_for('static', filename='cards/king_of_hearts.svg') }}",
+                "Jack of Hearts": "{{ url_for('static', filename='cards/jack_of_hearts2.svg') }}",
+                "Queen of Hearts": "{{ url_for('static', filename='cards/queen_of_hearts2.svg') }}",
+                "King of Hearts": "{{ url_for('static', filename='cards/king_of_hearts2.svg') }}",
+
                 // Diamonds
                 "Ace of Diamonds": "{{ url_for('static', filename='cards/ace_of_diamonds.svg') }}",
                 "Two of Diamonds": "{{ url_for('static', filename='cards/2_of_diamonds.svg') }}",
@@ -69,9 +70,10 @@
                 "Eight of Diamonds": "{{ url_for('static', filename='cards/8_of_diamonds.svg') }}",
                 "Nine of Diamonds": "{{ url_for('static', filename='cards/9_of_diamonds.svg') }}",
                 "Ten of Diamonds": "{{ url_for('static', filename='cards/10_of_diamonds.svg') }}",
-                "Jack of Diamonds": "{{ url_for('static', filename='cards/jack_of_diamonds.svg') }}",
-                "Queen of Diamonds": "{{ url_for('static', filename='cards/queen_of_diamonds.svg') }}",
-                "King of Diamonds": "{{ url_for('static', filename='cards/king_of_diamonds.svg') }}",
+                "Jack of Diamonds": "{{ url_for('static', filename='cards/jack_of_diamonds2.svg') }}",
+                "Queen of Diamonds": "{{ url_for('static', filename='cards/queen_of_diamonds2.svg') }}",
+                "King of Diamonds": "{{ url_for('static', filename='cards/king_of_diamonds2.svg') }}",
+
                 // Clubs
                 "Ace of Clubs": "{{ url_for('static', filename='cards/ace_of_clubs.svg') }}",
                 "Two of Clubs": "{{ url_for('static', filename='cards/2_of_clubs.svg') }}",
@@ -83,10 +85,10 @@
                 "Eight of Clubs": "{{ url_for('static', filename='cards/8_of_clubs.svg') }}",
                 "Nine of Clubs": "{{ url_for('static', filename='cards/9_of_clubs.svg') }}",
                 "Ten of Clubs": "{{ url_for('static', filename='cards/10_of_clubs.svg') }}",
-                "Jack of Clubs": "{{ url_for('static', filename='cards/jack_of_clubs.svg') }}",
-                "Queen of Clubs": "{{ url_for('static', filename='cards/queen_of_clubs.svg') }}",
-                "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs.svg') }}"
-            };
+                "Jack of Clubs": "{{ url_for('static', filename='cards/jack_of_clubs2.svg') }}",
+                "Queen of Clubs": "{{ url_for('static', filename='cards/queen_of_clubs2.svg') }}",
+                "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs2.svg') }}"
+           };
 
 
 
@@ -145,7 +147,91 @@
                     div.childNodes[1].textContent = state["playerHands"][div.id].length.toString();
                 }
             }
+
+            // UI AGENT LOGIC
+
+            socket.on("uiAgentRequest", function (data) {
+                console.log(JSON.stringify(data))
+                let request = data["request"];
+
+                if (playerID !== data["agentID"]){
+                    return
+                }
+                console.log("handling uiAgent:", agentID);
+
+                agent_request(request, agentID, function(action) {
+                    console.log(`${agentID} svarar med ${action.response.toString()} skickar till servern"`);
+                    socket.emit("uiAgentResponse", JSON.stringify(action));
+                });
+            })
+
+            function agent_request(type, id, callback) {
+                let infoDiv = document.getElementById(id).querySelector("div");
+                var ptag = document.createElement("p");
+                let textContent = {
+                    card2Play: "Index av kort att spela",
+                    layCard: "ID av agent kort ska läggas på",
+                    take_discard: "Discard är tom, tryck nej "
+                }
+                if (state["discardDeck"] && state["discardDeck"].length > 0){
+                    textContent["take_discard"] = "ta " + state["discardDeck"][0].toString()
+                }
+                ptag.textContent = textContent[type];
+                infoDiv.appendChild(ptag)
+                let response = {"agentID": id, "response": "yes"}
+                if (type !== "card2Play" && type !== "layCard") {
+                    // gets the player div
+                    var yesBtn = document.createElement("button");
+                    var noBtn = document.createElement("button");
+
+                    yesBtn.textContent = "Ja";
+                    noBtn.textContent = "Nej";
+                    yesBtn.onclick = function () {
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
+                        ptag.remove();
+                    }
+
+                    discardElement.onclick = function () {
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
+                        ptag.remove();
+                    }
+                    noBtn.onclick = function () {
+                        response["response"] = "no"
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
+                        ptag.remove();
+
+                    }
+                    let infoDiv = document.getElementById(id).querySelector("div");
+                    infoDiv.appendChild(yesBtn);
+                    infoDiv.appendChild(noBtn);
+                }
+                else if(type === "card2Play"){
+                    let inputBox = document.createElement("input")
+                    inputBox.type = "text";
+                    let submitButton = document.createElement("button");
+                    submitButton.textContent = "submit";
+                    submitButton.onclick = function () {
+                        response["response"] = inputBox.value;
+                        if (parseInt(inputBox.value) > state["playerHands"][id].length){
+                            return
+                        }
+                        callback(response)
+                        submitButton.remove();
+                        inputBox.remove();
+                        ptag.remove();
+                    }
+                    infoDiv.appendChild(inputBox);
+                    infoDiv.appendChild(submitButton);
+                }
+            }
         });
+
     </script>
 </head>
 <body>

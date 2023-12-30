@@ -55,5 +55,6 @@ if __name__ == "__main__":
    # start_game()
    # simulate_game()
    # bob = HumanAgent(1)
-  start_game()
+    start_game()
+
 

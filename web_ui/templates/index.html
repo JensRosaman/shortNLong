@@ -23,7 +23,7 @@
             var state;
             socket.emit("test", "socket connected!")
 
-           var imgLinks = {
+            const imgLinks = {
                 // Spades
                 "Ace of Spades": "{{ url_for('static', filename='cards/ace_of_spades.svg') }}",
                 "Two of Spades": "{{ url_for('static', filename='cards/2_of_spades.svg') }}",
@@ -35,9 +35,9 @@
                 "Eight of Spades": "{{ url_for('static', filename='cards/8_of_spades.svg') }}",
                 "Nine of Spades": "{{ url_for('static', filename='cards/9_of_spades.svg') }}",
                 "Ten of Spades": "{{ url_for('static', filename='cards/10_of_spades.svg') }}",
-                "Jack of Spades": "{{ url_for('static', filename='cards/jack_of_spades.svg') }}",
-                "Queen of Spades": "{{ url_for('static', filename='cards/queen_of_spades.svg') }}",
-                "King of Spades": "{{ url_for('static', filename='cards/king_of_spades.svg') }}",
+                "Jack of Spades": "{{ url_for('static', filename='cards/jack_of_spades2.svg') }}",
+                "Queen of Spades": "{{ url_for('static', filename='cards/queen_of_spades2.svg') }}",
+                "King of Spades": "{{ url_for('static', filename='cards/king_of_spades2.svg') }}",
 
                 // Hearts
                 "Ace of Hearts": "{{ url_for('static', filename='cards/ace_of_hearts.svg') }}",
@@ -50,9 +50,9 @@
                 "Eight of Hearts": "{{ url_for('static', filename='cards/8_of_hearts.svg') }}",
                 "Nine of Hearts": "{{ url_for('static', filename='cards/9_of_hearts.svg') }}",
                 "Ten of Hearts": "{{ url_for('static', filename='cards/10_of_hearts.svg') }}",
-                "Jack of Hearts": "{{ url_for('static', filename='cards/jack_of_hearts.svg') }}",
-                "Queen of Hearts": "{{ url_for('static', filename='cards/queen_of_hearts.svg') }}",
-                "King of Hearts": "{{ url_for('static', filename='cards/king_of_hearts.svg') }}",
+                "Jack of Hearts": "{{ url_for('static', filename='cards/jack_of_hearts2.svg') }}",
+                "Queen of Hearts": "{{ url_for('static', filename='cards/queen_of_hearts2.svg') }}",
+                "King of Hearts": "{{ url_for('static', filename='cards/king_of_hearts2.svg') }}",
 
                 // Diamonds
                 "Ace of Diamonds": "{{ url_for('static', filename='cards/ace_of_diamonds.svg') }}",
@@ -65,9 +65,9 @@
                 "Eight of Diamonds": "{{ url_for('static', filename='cards/8_of_diamonds.svg') }}",
                 "Nine of Diamonds": "{{ url_for('static', filename='cards/9_of_diamonds.svg') }}",
                 "Ten of Diamonds": "{{ url_for('static', filename='cards/10_of_diamonds.svg') }}",
-                "Jack of Diamonds": "{{ url_for('static', filename='cards/jack_of_diamonds.svg') }}",
-                "Queen of Diamonds": "{{ url_for('static', filename='cards/queen_of_diamonds.svg') }}",
-                "King of Diamonds": "{{ url_for('static', filename='cards/king_of_diamonds.svg') }}",
+                "Jack of Diamonds": "{{ url_for('static', filename='cards/jack_of_diamonds2.svg') }}",
+                "Queen of Diamonds": "{{ url_for('static', filename='cards/queen_of_diamonds2.svg') }}",
+                "King of Diamonds": "{{ url_for('static', filename='cards/king_of_diamonds2.svg') }}",
 
                 // Clubs
                 "Ace of Clubs": "{{ url_for('static', filename='cards/ace_of_clubs.svg') }}",
@@ -80,23 +80,20 @@
                 "Eight of Clubs": "{{ url_for('static', filename='cards/8_of_clubs.svg') }}",
                 "Nine of Clubs": "{{ url_for('static', filename='cards/9_of_clubs.svg') }}",
                 "Ten of Clubs": "{{ url_for('static', filename='cards/10_of_clubs.svg') }}",
-                "Jack of Clubs": "{{ url_for('static', filename='cards/jack_of_clubs.svg') }}",
-                "Queen of Clubs": "{{ url_for('static', filename='cards/queen_of_clubs.svg') }}",
-                "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs.svg') }}"
+                "Jack of Clubs": "{{ url_for('static', filename='cards/jack_of_clubs2.svg') }}",
+                "Queen of Clubs": "{{ url_for('static', filename='cards/queen_of_clubs2.svg') }}",
+                "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs2.svg') }}"
             };
 
 
-
             socket.on("game_state", function (ans) {
-                console.log("State recived")
+                console.log(`got the state : ${JSON.stringify(ans)}`);
                 state = ans;
                 updateUI()
             })
 
             function updateUI() {
                 // Updates the game ui with the info from the state
-                console.log(`got the state : ${JSON.stringify(state)}`)
-
                 // updating the round counter
                 round.innerText = "Runda: " + state["round"].toString()
 
@@ -119,11 +116,44 @@
                             handDiv.appendChild(img)
                         }
                     }
-                    if(playerId === state["currentPlayer"]){
+                    if(parseInt(playerId) === state["currentPlayer"]){
                         child.style.backgroundColor = "red"
                     }
+                    else{
+                        child.style.backgroundColor = "darkgrey"
+                    }
+                    if (state["declaredCards"][playerId] != null){
+                        updateDeclaredCards(playerId)
+                    }
+                }
+
+            }
+
+
+            function updateDeclaredCards(playerID){
+                const declaredRuns = state["declaredCards"][playerID]["runs"];
+                const runs = document.getElementById("runs" + playerID)
+                const sets = document.getElementById("sets" + playerID)
+
+                runs.replaceChildren();
+                for (const card of declaredRuns) {
+                    let img = document.createElement("img");
+                    img.src = imgLinks[card];
+                    img.classList.add("declaredCards");
+                    runs.appendChild(img);
+                }
+                sets.replaceChildren();
+                const declaredSets = state["declaredCards"][playerID]["sets"];
+                for (const card of declaredSets) {
+                    let img = document.createElement("img");
+                    img.src = imgLinks[card];
+                    img.classList.add("declaredCards");
+                    sets.appendChild(img);
                 }
             }
+
+
+
 
             // Agent
             socket.on("uiAgentRequest", function (data) {
@@ -218,29 +248,46 @@
         <div id="hand1">
         </div>
         <div id="declared1">
+            <div id="runs1">
 
+            </div>
+            <div id="sets1">
+
+            </div>
         </div>
     </div>
     <div id="2">
         <h1>p2</h1>
-        <div id="hand2">
+        <div id="hand2"></div>
+        <div id="declared2">
+            <div id="runs2"></div>
+            <div id="sets2"></div>
         </div>
     </div>
     <div id="3">
         <h1>p3</h1>
-        <div id="hand3">
+        <div id="hand3"></div>
+        <div id="declared3">
+            <div id="runs3"></div>
+            <div id="sets3"></div>
         </div>
     </div>
     <div id="4">
         <h1>p4</h1>
-        <div id="hand4">
+        <div id="hand4"></div>
+        <div id="declared4">
+            <div id="runs4"></div>
+            <div id="sets4"></div>
         </div>
     </div>
     <div id="5">
         <h1>p5</h1>
-        <div id="hand5">
+        <div id="hand5"></div>
+        <div id="declared5">
+            <div id="runs5"></div>
+            <div id="sets5"></div>
         </div>
-</div>
+    </div>
     <img src="" id="discardImg">
 </div>
 

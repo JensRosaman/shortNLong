@@ -527,13 +527,14 @@ class Game:
                     self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
                     self.currentPlayer.turn = True
                     current_player_index = self._playOrder.index(agentOfCurrentPlayer)
-                    agentToPick = None
                     self.layMap = self.available_to_lay_cards_to()
+
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
-
+                        self._check_deck()
                         self.send_state()
-
+                        agentToPick = None
+                        cardPicked = False  # Flag to track whether any agent has picked a card
                         if len(self.discardDeck) <= 0:
                             break # cant take from empty deck
 
@@ -547,7 +548,7 @@ class Game:
                             else:
                                 agentToPick = None
 
-                        if agentToPick is None:# No agent picks from discard - proceed to their turn
+                        if not cardPicked:# No agent picks from discard - proceed to their turn
                             break
                         # if it isn't playerTopPicks turn - give penalty and loop again
                         elif not (agentOfCurrentPlayer == agentToPick):
@@ -560,7 +561,8 @@ class Game:
                             self.currentPlayer.add_card(self.discardDeck[-1])
                             self.currentPlayer.takenCard = True
                             self.discardDeck.pop(-1)
-
+                    # end of discard loop
+                    self._check_deck()
                     # start of the turn of the current player - starts when picking up a card
                     if not self.currentPlayer.takenCard and len(self.deck.deck) > 0:
                         self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
@@ -580,11 +582,11 @@ class Game:
                     elif (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0): # check if i
                        # avalibleLays = self.can_lay_card_to_player(self.currentPlayer)
                         availableLays = self.can_lay_card_to_player(self.currentPlayer)
-                        while len(availableLays) > 0:
-                            # agentToLayTo = self.players[hash(layChoice["agentToLayTo"])]
+                        while len(list(availableLays)) > 0:
+                            stateOfPlayer = self.get_current_state(agentOfCurrentPlayer)  # updates the current state for the current player
                             print(availableLays)
-                            layChoice = agentOfCurrentPlayer.request_lay_cards(state)  # (agentID
-                            print(f"laychoice for  is ",layChoice)
+                            layChoice = agentOfCurrentPlayer.request_lay_cards(stateOfPlayer)  # (agentID
+                            print(f"laychoice for {agentOfCurrentPlayer.agentID}  is ",layChoice)
                             self.lay_cards(
                                 agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"], layToRun=layChoice["layToRun"], playerLaying=self.currentPlayer
                             )
@@ -593,7 +595,7 @@ class Game:
                     # request what card to play n play it
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
                     self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
-
+                    self.send_state()
                     self.currentPlayer.takenCard = False
                     # next round starting
 
@@ -607,6 +609,11 @@ class Game:
             player.hand = cardsToGive[i]
             i += 1
 
+    def _check_deck(self):
+        """Checks if the deck is empty and if it is, assigns the deck to the discard"""
+        if len(self.deck.deck) >= 0 and len(self.discardDeck) > 0:
+            self.deck.deck = [card for card in self.discardDeck]
+            self.discardDeck = []
 
     def _calculate_penalty(self, positionInStack:int, player:Player):
         """Takes the position of the stack and returns the amount the player has to take"""
@@ -625,6 +632,8 @@ class Game:
         Gives the player object a penalty card
             positionInStack - the index of the wanted card, 
         """
+        #if len(self.deck.deck) <= 0:
+           # return
         penaltyCard = self.deck.remove_card(top=True)
         playerToPenalize.add_card(penaltyCard) # tar översta kortet från högern och lägger till i handen
         playerToPenalize.add_card(self.discardDeck.pop(-1))
@@ -737,6 +746,7 @@ class Game:
             "completeSets": requestingPlayer.completedSets, #list[Card]
             "completeRuns": requestingPlayer.completedRuns, # list[Card]
             "declaredCards": {player.ID: self.declaredCard[player] for player in self.declaredCards},
+            "playerScore": self.calculate_points(player=requestingPlayer)
         }
         """
         self.state = {
@@ -756,7 +766,7 @@ class Game:
             "completeSets": [str(card) for card in requestingPlayer.completedSets],  # list[str]
             "completeRuns": [str(card) for card in requestingPlayer.completedRuns],  # list[str]
             "declaredCards":  {agent.agentID: self.declaredCards[agent] for agent in self.declaredCards},
-            "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
+            "playerScore": self.calculate_points(player=requestingPlayer),
             "availableToLayTo": availableToLayTo #{agent.agentID: {"runs": str([availableToLayTo[agent]["runs"]]),"sets": str([availableToLayTo[agent]["sets"]])} for agent in availableToLayTo}
         }
         return self.state

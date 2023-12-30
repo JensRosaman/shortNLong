@@ -161,7 +161,9 @@ class randAgent:
 
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
-        return bool(random.randint(0, 1))
+        ans = bool(random.randint(0, 1))
+        print(self.agentID, " svarar med ", ans)
+        return ans
     def request_lay_cards(self,state):
         """Requests an action asking what player to lay a card to"""
         availableToLayTo = state["availableToLayTo"]
@@ -177,3 +179,54 @@ class randAgent:
         if layToRun:
             return {"layToRun": layToRun, "agentToLayTo": chosenAgent, "cardToLay": availableToLayTo[chosenAgent]["runs"][0]}
         return {"layToRun": layToRun, "agentToLayTo": chosenAgent, "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
+
+
+class Mormor:
+    """ serves as the template to create other agent classes of"""
+
+    def __init__(self, agentID: int) -> None:
+        self.agentID = agentID
+
+    def __hash__(self) -> int:
+        return self.agentID
+
+    def __repr__(self) -> str:
+        return str(self.agentID)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.agentID == other.agentID
+        return False
+
+    def request_declare(self, state: dict) -> bool:
+        """Returns bool if the agent wants to declare their cards"""
+        return True
+
+
+    def request_card2Play(self, state: dict) -> int:
+        "Asks for the index of the card to play -> index int of played card"
+        if len(state["completeSets"]) > 0 and state["winConditions"]["runs"] > 0:
+            pass
+
+    def request_take_discard(self, state: dict) -> bool:
+        """Gets state of the game and returns ans"""
+
+
+    def request_lay_cards(self,state):
+        """Requests an action asking what player to lay a card to"""
+        availableToLayTo = state["availableToLayTo"]
+        chosenAgent = random.choice(list(availableToLayTo))
+
+        if len(availableToLayTo[chosenAgent]["runs"]) > 0: # if run is available lay there
+            layToRun = True
+        else:
+            layToRun = False
+
+        # return the first card in the sets list or the runs list
+        if layToRun:
+            return {"layToRun": layToRun, "agentToLayTo": chosenAgent,
+                    "cardToLay": availableToLayTo[chosenAgent]["runs"][0]}
+        return {"layToRun": layToRun, "agentToLayTo": chosenAgent,
+                "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
+
+    g # agent never gets asked for take discard
