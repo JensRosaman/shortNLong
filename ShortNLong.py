@@ -544,16 +544,15 @@ class Game:
 
                             if agent.request_take_discard(state): # if the user wants to take the card
                                 agentToPick = agent
+                                cardPicked = True
                                 break
                             else:
                                 agentToPick = None
 
                         if not cardPicked:# No agent picks from discard - proceed to their turn
+                            print("No one picks")
                             break
                         # if it isn't playerTopPicks turn - give penalty and loop again
-                        elif not (agentOfCurrentPlayer == agentToPick):
-                            # hands cards to the penalized player
-                            self._take_discard(self.players[agentToPick])
 
                         elif agentOfCurrentPlayer == agentToPick:
                             if self.currentPlayer.takenCard: # if player already have picked a card from discard then a penalty folows
@@ -561,6 +560,9 @@ class Game:
                             self.currentPlayer.add_card(self.discardDeck[-1])
                             self.currentPlayer.takenCard = True
                             self.discardDeck.pop(-1)
+                        else:
+                            # hands cards to the penalized player
+                            self._take_discard(self.players[agentToPick])
                     # end of discard loop
                     self._check_deck()
                     # start of the turn of the current player - starts when picking up a card

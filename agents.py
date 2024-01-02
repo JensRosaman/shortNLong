@@ -229,4 +229,4 @@ class Mormor:
         return {"layToRun": layToRun, "agentToLayTo": chosenAgent,
                 "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
 
-    g # agent never gets asked for take discard
+     # agent never gets asked for take discard
