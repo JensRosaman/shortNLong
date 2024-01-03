@@ -525,6 +525,22 @@ class Game:
                             break # cant take from empty deck
 
                         agentToPick = self.discard_request(agentOfCurrentPlayer=agentOfCurrentPlayer,current_player_index=self._playOrder.index(agentOfCurrentPlayer))
+
+                        if agentToPick is None:
+                            print("no one picks")
+                            break
+                        elif agentOfCurrentPlayer == agentToPick:
+                            if self.currentPlayer.takenCard:  # if player already have picked a card from discard then a penalty folows
+                                self.currentPlayer.add_card(self.deck.remove_card(top=True))
+                            self.currentPlayer.add_card(self.discardDeck[-1])
+                            self.currentPlayer.takenCard = True
+                            self.discardDeck.pop(-1)
+
+                        # if it isn't playerTopPicks turn - give penalty and loop again
+                        else:
+                            # hands cards to the penalized player
+                            self._take_discard(playerToPenalize=self.players[agentToPick])
+
                     # end of discard loop
                     self._check_deck()
                     # start of the turn of the current player - starts when picking up a card
@@ -589,27 +605,11 @@ class Game:
             state = self.get_current_state(playerId=agent)
 
             if agent.request_take_discard(state):  # if the user wants to take the card
-                agentToPick = agent
                 return agent
-
             else:
-                agentToPick = None
+                return None
 
-        if not cardPicked:  # No agent picks from discard - proceed to their turn
-            print("No one picks")
-            return None
-        # if it isn't playerTopPicks turn - give penalty and loop again
-        return agentToPick
-        elif agentOfCurrentPlayer == agentToPick:
-            if self.currentPlayer.takenCard:  # if player already have picked a card from discard then a penalty folows
-                self.currentPlayer.add_card(self.deck.remove_card(top=True))
-            self.currentPlayer.add_card(self.discardDeck[-1])
-            self.currentPlayer.takenCard = True
-            self.discardDeck.pop(-1)
-        else:
-            # hands cards to the penalized player
-            self._take_discard(self.players[agentToPick])
-        return agentToPick
+
     def _hand_out_cards(self, cardAmount):
         """Hands out cards to players and creates a playerlist, reset deck!!!"""
         cardsToGive = self.deck.hand_out_cards(playerAmount=self.numOfPlayers, cardAmount=cardAmount)
@@ -643,8 +643,8 @@ class Game:
         Gives the player object a penalty card
             positionInStack - the index of the wanted card, 
         """
-        #if len(self.deck.deck) <= 0:
-           # return
+        print(playerToPenalize)
+
         penaltyCard = self.deck.remove_card(top=True)
         playerToPenalize.add_card(penaltyCard) # tar översta kortet från högern och lägger till i handen
         playerToPenalize.add_card(self.discardDeck.pop(-1))
