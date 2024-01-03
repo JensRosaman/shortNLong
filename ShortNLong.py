@@ -494,23 +494,10 @@ class Game:
                 break
 
             # preparing the game for the next round
-
-            if len(self.playerScores) == 0:
-                self.playerScores = {agent: 0 for agent in self.playerIDs}
-            else:
-                for agent in self.playerIDs:
-                    self.playerScores[agent] += self.calculate_points(player=self.players[agent])
-            # moves the previous first player to the back to simulate each player taking turn being the first player
-            if self.round > 1:
-                self._playOrder.append(self._playOrder.pop(0))
-            else:
-                for agent in self.playerIDs: # creating player instances
-                    self.players[agent] = Player(player_id=agent, cards=[])
-                self._playOrder = list(self.players)
+            
+            self._update_score_table()
             # laying out starting cards
-            self.deck = Deck()
-            self.discardDeck.append(self.deck.remove_card(top=True))
-            self._hand_out_cards(cardsToHandOut)
+            self._prepare_for_next_round(cardsToHandOut)
             cardsToHandOut += 1
 
             # updating the turn of each of the players to update their internal logic
@@ -526,7 +513,6 @@ class Game:
 
                     self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
                     self.currentPlayer.turn = True
-                    current_player_index = self._playOrder.index(agentOfCurrentPlayer)
                     self.layMap = self.available_to_lay_cards_to()
 
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
@@ -538,31 +524,7 @@ class Game:
                         if len(self.discardDeck) <= 0:
                             break # cant take from empty deck
 
-                        askingOrder = self._playOrder[current_player_index:] + self._playOrder[:current_player_index]
-                        for agent in askingOrder:
-                            state = self.get_current_state(playerId=agent)
-
-                            if agent.request_take_discard(state): # if the user wants to take the card
-                                agentToPick = agent
-                                cardPicked = True
-                                break
-                            else:
-                                agentToPick = None
-
-                        if not cardPicked:# No agent picks from discard - proceed to their turn
-                            print("No one picks")
-                            break
-                        # if it isn't playerTopPicks turn - give penalty and loop again
-
-                        elif agentOfCurrentPlayer == agentToPick:
-                            if self.currentPlayer.takenCard: # if player already have picked a card from discard then a penalty folows
-                                self.currentPlayer.add_card(self.deck.remove_card(top=True))
-                            self.currentPlayer.add_card(self.discardDeck[-1])
-                            self.currentPlayer.takenCard = True
-                            self.discardDeck.pop(-1)
-                        else:
-                            # hands cards to the penalized player
-                            self._take_discard(self.players[agentToPick])
+                        agentToPick = self.discard_request(agentOfCurrentPlayer=agentOfCurrentPlayer,current_player_index=self._playOrder.index(agentOfCurrentPlayer))
                     # end of discard loop
                     self._check_deck()
                     # start of the turn of the current player - starts when picking up a card
@@ -582,7 +544,6 @@ class Game:
                             self.send_state()
 
                     elif (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0): # check if i
-                       # avalibleLays = self.can_lay_card_to_player(self.currentPlayer)
                         availableLays = self.can_lay_card_to_player(self.currentPlayer)
                         while len(list(availableLays)) > 0:
                             stateOfPlayer = self.get_current_state(agentOfCurrentPlayer)  # updates the current state for the current player
@@ -601,6 +562,54 @@ class Game:
                     self.currentPlayer.takenCard = False
                     # next round starting
 
+
+    def _prepare_for_next_round(self, cardsToHandOut):
+        self.deck = Deck()
+        self.discardDeck.append(self.deck.remove_card(top=True))
+        self._hand_out_cards(cardsToHandOut)
+
+    def _update_score_table(self):
+        if len(self.playerScores) == 0:
+            self.playerScores = {agent: 0 for agent in self.playerIDs}
+        else:
+            for agent in self.playerIDs:
+                self.playerScores[agent] += self.calculate_points(player=self.players[agent])
+        # moves the previous first player to the back to simulate each player taking turn being the first player
+        if self.round > 1:
+            self._playOrder.append(self._playOrder.pop(0))
+        else:
+            for agent in self.playerIDs:  # creating player instances
+                self.players[agent] = Player(player_id=agent, cards=[])
+            self._playOrder = list(self.players)
+
+    def discard_request(self,current_player_index,agentOfCurrentPlayer):
+        """Requests an action from all the agents and returns the agent to pick"""
+        askingOrder = self._playOrder[current_player_index:] + self._playOrder[:current_player_index]
+        for agent in askingOrder:
+            state = self.get_current_state(playerId=agent)
+
+            if agent.request_take_discard(state):  # if the user wants to take the card
+                agentToPick = agent
+                return agent
+
+            else:
+                agentToPick = None
+
+        if not cardPicked:  # No agent picks from discard - proceed to their turn
+            print("No one picks")
+            return None
+        # if it isn't playerTopPicks turn - give penalty and loop again
+        return agentToPick
+        elif agentOfCurrentPlayer == agentToPick:
+            if self.currentPlayer.takenCard:  # if player already have picked a card from discard then a penalty folows
+                self.currentPlayer.add_card(self.deck.remove_card(top=True))
+            self.currentPlayer.add_card(self.discardDeck[-1])
+            self.currentPlayer.takenCard = True
+            self.discardDeck.pop(-1)
+        else:
+            # hands cards to the penalized player
+            self._take_discard(self.players[agentToPick])
+        return agentToPick
     def _hand_out_cards(self, cardAmount):
         """Hands out cards to players and creates a playerlist, reset deck!!!"""
         cardsToGive = self.deck.hand_out_cards(playerAmount=self.numOfPlayers, cardAmount=cardAmount)
