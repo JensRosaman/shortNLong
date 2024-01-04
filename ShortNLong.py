@@ -504,31 +504,32 @@ class Game:
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
-            print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n {self.players}")
+            print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
             # Gameplay loop for the different rounds
             notStopped = True
             while notStopped: # Stopping occurs when a player finishes their stick
                 #  print("loop started")
                 for agentOfCurrentPlayer in self._playOrder: # I am the agent obj of the current player mainloop
-
+                    print(f"new turn starting current player is {agentOfCurrentPlayer.agentID}")
                     self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
                     self.currentPlayer.turn = True
                     self.layMap = self.available_to_lay_cards_to()
-
+                    i = 0
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
                         self._check_deck()
                         self.send_state()
-                        agentToPick = None
-                        cardPicked = False  # Flag to track whether any agent has picked a card
+
                         if len(self.discardDeck) <= 0:
+                            print(f"Discard is {self.discardDeck}, ending discard loop")
                             break # cant take from empty deck
 
-                        agentToPick = self.discard_request(agentOfCurrentPlayer=agentOfCurrentPlayer,current_player_index=self._playOrder.index(agentOfCurrentPlayer))
-
+                        agentToPick = self.discard_request(
+                            current_player_index=self._playOrder.index(agentOfCurrentPlayer))
                         if agentToPick is None:
                             print("no one picks")
                             break
+
                         elif agentOfCurrentPlayer == agentToPick:
                             if self.currentPlayer.takenCard:  # if player already have picked a card from discard then a penalty folows
                                 self.currentPlayer.add_card(self.deck.remove_card(top=True))
@@ -540,7 +541,7 @@ class Game:
                         else:
                             # hands cards to the penalized player
                             self._take_discard(playerToPenalize=self.players[agentToPick])
-
+                        print(f"agent {agentToPick.agentID} picks from discard")
                     # end of discard loop
                     self._check_deck()
                     # start of the turn of the current player - starts when picking up a card
@@ -590,7 +591,6 @@ class Game:
         else:
             for agent in self.playerIDs:
                 self.playerScores[agent] += self.calculate_points(player=self.players[agent])
-        # moves the previous first player to the back to simulate each player taking turn being the first player
         if self.round > 1:
             self._playOrder.append(self._playOrder.pop(0))
         else:
@@ -598,16 +598,16 @@ class Game:
                 self.players[agent] = Player(player_id=agent, cards=[])
             self._playOrder = list(self.players)
 
-    def discard_request(self,current_player_index,agentOfCurrentPlayer):
+    def discard_request(self,current_player_index):
         """Requests an action from all the agents and returns the agent to pick"""
         askingOrder = self._playOrder[current_player_index:] + self._playOrder[:current_player_index]
+        print(askingOrder)
         for agent in askingOrder:
             state = self.get_current_state(playerId=agent)
 
             if agent.request_take_discard(state):  # if the user wants to take the card
                 return agent
-            else:
-                return None
+        return None
 
 
     def _hand_out_cards(self, cardAmount):
@@ -622,9 +622,10 @@ class Game:
 
     def _check_deck(self):
         """Checks if the deck is empty and if it is, assigns the deck to the discard"""
-        if len(self.deck.deck) >= 0 and len(self.discardDeck) > 0:
-            self.deck.deck = [card for card in self.discardDeck]
+        if len(self.deck.deck) <= 0 < len(self.discardDeck):
+            self.deck.deck = [card for card in self.discardDeck][::-1]
             self.discardDeck = []
+            print("Transfering the cards from the discard to the deck")
 
     def _calculate_penalty(self, positionInStack:int, player:Player):
         """Takes the position of the stack and returns the amount the player has to take"""

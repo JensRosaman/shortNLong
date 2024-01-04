@@ -51,3 +51,10 @@ body{
     width: fit-content;
     height: fit-content;
 }
+
+#requests{
+    background-color: beige;
+    width: 100px;
+    height: 200px;
+
+}

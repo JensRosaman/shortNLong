@@ -15,17 +15,17 @@
     <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
     <script type="text/javascript" charset="utf-8">
         document.addEventListener("DOMContentLoaded", function() {
-            var round = document.getElementById("round");
-            var discardElement = document.getElementById("discardImg")
-            var parent = document.getElementById("parent")
+            let round = document.getElementById("round");
+            let discardElement = document.getElementById("discardImg")
+            let parent = document.getElementById("parent")
             const infoBox = document.getElementById("infoBox")
             const hand = document.getElementById("hand")
             const otherPlayers = document.getElementById("otherPlayers")
             const playerID = parseInt("{{ agentID }}");
             const runs = document.getElementById("runs")
             const sets = document.getElementById("sets")
-            var socket = io();
-            var state;
+            const socket = io();
+            let state;
             socket.emit("test", "socket connected!")
 
             var imgLinks = {
@@ -245,7 +245,6 @@
             </div>
         <h>Kort:</h>
         <div id="hand">
-
         </div>
         <div id="otherPlayers">
             <div id="1">
@@ -268,6 +267,9 @@
                 <p></p>
             </div>
         </div>
+    </div>
+    <div id="requests">
+
     </div>
     <div id="declaredCards">
         runs:

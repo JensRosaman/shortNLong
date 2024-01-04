@@ -17,8 +17,10 @@
 
 
         document.addEventListener("DOMContentLoaded", function() {
-            round = document.getElementById("round");
-            discardElement = document.getElementById("discardImg")
+            const round = document.getElementById("round");
+            const discardElement = document.getElementById("discardImg")
+            const requestDiv = document.getElementById(id).querySelector("div");
+
             var socket = io();
             var state;
             socket.emit("test", "socket connected!")
@@ -160,7 +162,7 @@
                 console.log(JSON.stringify(data))
                 let request = data["request"];
                 let agentID = data["agentID"];
-                console.log("handling uiAgent:", agentID);
+                console.log("handling uiAgent:" + agentID + " With the request " + request );
 
                 agent_request(request, agentID, function(action) {
                     console.log(`${agentID} svarar med ${action.response.toString()} skickar till servern"`);
@@ -169,7 +171,6 @@
             })
 
             function agent_request(type, id, callback) {
-                let infoDiv = document.getElementById(id).querySelector("div");
                 var ptag = document.createElement("p");
                 let textContent = {
                     card2Play: "Index av kort att spela",
@@ -180,7 +181,7 @@
                     textContent["take_discard"] = "ta " + state["discardDeck"][0].toString()
                 }
                 ptag.textContent = textContent[type];
-                infoDiv.appendChild(ptag)
+                requestDiv.appendChild(ptag)
                 let response = {"agentID": id, "response": "yes"}
                 if (type !== "card2Play" && type !== "layCard") {
                     // gets the player div
@@ -210,9 +211,8 @@
                         ptag.remove();
 
                     }
-                    let infoDiv = document.getElementById(id).querySelector("div");
-                    infoDiv.appendChild(yesBtn);
-                    infoDiv.appendChild(noBtn);
+                    requestDiv.appendChild(yesBtn);
+                    requestDiv.appendChild(noBtn);
                 }
                 else if(type === "card2Play"){
                     let inputBox = document.createElement("input")
@@ -229,9 +229,10 @@
                         inputBox.remove();
                         ptag.remove();
                     }
-                    infoDiv.appendChild(inputBox);
-                    infoDiv.appendChild(submitButton);
+                    requestDiv.appendChild(inputBox);
+                    requestDiv.appendChild(submitButton);
                 }
+
             }
         });
 

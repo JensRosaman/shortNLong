@@ -28,12 +28,12 @@ def start_game():
 
     spelare = [1, 2, 3, 4, 5]
     for i in spelare:
-        #if i == 2:
-            #spelare[spelare.index(i)] = GuiAgent(agentID=i,apiUrl=url)
-            #continue
+        if i == 2:
+            spelare[spelare.index(i)] = GuiAgent(agentID=i,apiUrl=url)
+            continue
         spelare[spelare.index(i)] = randAgent(agentID=i)
 
-    spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)  # spelareObj.__run_of_four__()    spel.start_game()
+    spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
 def simulate_game():
 

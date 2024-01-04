@@ -34,7 +34,7 @@ class Agent:
 
 
 
-class HumanAgent:
+class ConsoleAgent:
     """Agent that takes input from the command line"""
     def __init__(self, agentID: int) -> None:
         self.human = True
