@@ -34,13 +34,12 @@ def start_game(guiagent=False):
                 continue
         spelare[spelare.index(i)] = Mormor(agentID=i)
 
-   # spelare = [Mormor(1),Mormor(2),Mormor(3),Mormor(4),randAgent(5)]
+    spelare = [Mormor(1),Mormor(2),Mormor(3),Mormor(4),Guiagent(5)]
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
 def simulate_game():
 
         bob = GuiAgent(1)
-        #bob = HumanAgent(1)
         spel = Game([bob], guiActive=True) #spelareObj.__run_of_four__()
         spel.deck = Deck()
         spel._hand_out_cards(10)

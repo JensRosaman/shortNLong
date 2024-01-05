@@ -26,7 +26,8 @@
             const socket = io();
             const requestDiv = document.getElementById("requests");
             const deckElement = document.getElementById("deckImg")
-            const winConditions = document.getElementById("winConditions")
+            const winConditions = document.getElementById("winConditions");
+            const declaredCards = document.getElementById("declaredCards");
             let state;
             socket.emit("test", "socket connected!")
 
@@ -130,19 +131,28 @@
                     img.classList.add("cardInHand");
                     hand.appendChild(img);
                 }
-                updateOtherPlayerInfo();
-                updateDeclaredCards();
+                //updateOtherPlayerInfo();
+                updateDeclaredCards(playerID);
 
             }
-
             function updateDeclaredCards(){
-                runs.replaceChildren();
-                sets.replaceChildren();
-                if (state["declaredCards"][playerID] === null){
-                        return
+                declaredCards.replaceChildren();
+                for (const agentID in state["declaredCards"]) {
+                    if (state["declaredCards"].hasOwnProperty(agentID)) {
+                        const declaredDiv = getDeclaredDiv(agentID);
+                        declaredDiv.id = "declaredCards" + agentID;
+                        declaredDiv.classList.add("agentDeclared")
+                        declaredCards.appendChild(declaredDiv)
+                    }
                 }
+            }
+            function getDeclaredDiv(playerID){
+
                 const declaredRuns = state["declaredCards"][playerID]["runs"];
                 const declaredSets = state["declaredCards"][playerID]["sets"];
+                const runDiv = document.createElement("div")
+                const setDiv = document.createElement("div")
+                const parent = document.createElement("div")
 
 
                 for (let i = 0; i < declaredSets.length; i++) {
@@ -155,7 +165,7 @@
                     img.src = imgLinks[card];
                     img.classList.add("declaredCards");
                     div.appendChild(img);
-                    sets.appendChild(div);
+                    setDiv.appendChild(div);
                 }
 
                 // setting the runs
@@ -176,19 +186,13 @@
                     let img2 = document.createElement("img");
                     img2.src = imgLinks[lastCard];
                     img2.classList.add("declaredCards");
+
                     div.appendChild(img2);
-                    runs.appendChild(div);
+                    runDiv.appendChild(div);
                 }
-
-                /**
-                for (const card of declaredRuns) {
-                    let img = document.createElement("img");
-                    img.src = imgLinks[card];
-                    img.classList.add("declaredCards");
-                    runs.appendChild(img);
-                }
-
-                    */
+                parent.appendChild(setDiv);
+                parent.appendChild(runDiv);
+                return parent;
 
             }
 
@@ -203,7 +207,6 @@
             socket.on("uiAgentRequest", function (data) {
                 console.log(JSON.stringify(data))
                 let request = data["request"];
-
                 if (playerID !== data["agentID"]){
                     return
                 }
@@ -285,6 +288,7 @@
                             onCardClick(child)
                         });
                     }
+                    // old shit
                     let inputBox = document.createElement("input")
                     inputBox.type = "text";
                     let submitButton = document.createElement("button");
@@ -301,6 +305,9 @@
                     }
                     requestDiv.appendChild(inputBox);
                     requestDiv.appendChild(submitButton);
+                }
+                else if (type === "layCard"){
+
                 }
             }
 
@@ -319,29 +326,8 @@
                 <img src="" id="discardImg" alt="">
                 <img id="deckImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Card_back_01.svg/1200px-Card_back_01.svg.png" draggable="false" alt="">
             </div>
-        <h1>Kort:</h1>
         <div id="hand">
-        </div>
-        <div id="otherPlayers">
-            <div id="1">
-                cardCount:
-                <p></p>
-            </div>
 
-            <div id="2">
-                cardCount:
-                 <p></p>
-            </div>
-            <div id="3">
-                cardCount:
-                <p></p>
-            </div>
-            <div id="4">cardCount:
-                <p></p>
-            </div>
-            <div id="5">cardCount:
-                <p></p>
-            </div>
         </div>
         <div id="declaredCards">
 

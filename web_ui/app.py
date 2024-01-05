@@ -72,7 +72,8 @@ def test(data):
 
 
 def run_app():
-    socketio.run(app=app, debug=True, host="localhost", port=5000, allow_unsafe_werkzeug=True)
+    # , host="localhost"
+    socketio.run(app=app, debug=True, port=5000, allow_unsafe_werkzeug=True)
 
 # 192.168.0.17
 

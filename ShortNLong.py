@@ -480,6 +480,7 @@ class Game:
         self.guiAgents = [agent.agentID for agent in playerIDS if "guiAgent" in agent.__dict__]
         self.playerScores = {}
         self.layMap = {}
+        self.winningPlayer = None
         
     def start_game(self):
         """Starts the gameplay loop"""
@@ -505,6 +506,7 @@ class Game:
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
+            turns = 0
             print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
             # Gameplay loop for the different rounds
             notStopped = True
@@ -578,6 +580,18 @@ class Game:
                     else:
                         print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
                     # request what card to play n play it
+                    if (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
+                        and len(self.currentPlayer.hand) <= 1
+                        ):
+                        if len(self.currentPlayer.hand) == 1:
+                            cardToPlay = self.currentPlayer.hand[0]
+                            self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
+                            self.send_state()
+
+                        print(f"Game ended, the winner is {self.currentPlayer}")
+                        3 / 0
+                        break
+
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
                     self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
                     self.send_state()
@@ -591,6 +605,7 @@ class Game:
         self._hand_out_cards(cardsToHandOut)
 
     def _update_score_table(self):
+        # first time table is updated aka first round
         if len(self.playerScores) == 0:
             self.playerScores = {agent: 0 for agent in self.playerIDs}
         else:

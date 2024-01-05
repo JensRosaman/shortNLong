@@ -101,6 +101,7 @@
                 //update discard
                 if(state["discardDeck"].length > 0){
                     discardElement.setAttribute("src", imgLinks[state["discardDeck"][state["discardDeck"].length - 1]]);
+                    discardElement.style.opacity = "1";
                 }
                 else {discardElement.style.opacity = "0"}
                 // updating player info
@@ -126,7 +127,16 @@
                         child.style.backgroundColor = "darkgrey"
                     }
 
-                    updateDeclaredCards(playerId)
+                    if (state["declaredCards"].hasOwnProperty(playerId)){
+                        updateDeclaredCards(playerId)
+                    }
+                    else {
+                       const runs = document.getElementById("runs" + playerId)
+                        const sets = document.getElementById("sets" + playerId)
+                        runs.replaceChildren();
+                        sets.replaceChildren();
+                    }
+
 
                 }
 
@@ -138,9 +148,7 @@
                 const sets = document.getElementById("sets" + playerID)
                 runs.replaceChildren();
                 sets.replaceChildren();
-                if (state["declaredCards"][playerID]["runs"] === null && state["declaredCards"][playerID]["sets"] === null){
-                        return
-                }
+                console.log(state["declaredCards"][playerID])
                 const declaredRuns = state["declaredCards"][playerID]["runs"];
                 const declaredSets = state["declaredCards"][playerID]["sets"];
 
