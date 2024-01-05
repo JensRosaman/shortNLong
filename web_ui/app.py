@@ -69,7 +69,6 @@ def ui_agent_response(ans):
 def test(data):
     print(data)
     print(f"url for hidden is {'http://localhost:5000' + url_for('hidden_ui', agentID=1)}")
-    return ""
 
 
 def run_app():

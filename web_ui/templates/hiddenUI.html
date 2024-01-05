@@ -18,17 +18,19 @@
             let round = document.getElementById("round");
             let discardElement = document.getElementById("discardImg")
             let parent = document.getElementById("parent")
-            const infoBox = document.getElementById("infoBox")
             const hand = document.getElementById("hand")
             const otherPlayers = document.getElementById("otherPlayers")
             const playerID = parseInt("{{ agentID }}");
             const runs = document.getElementById("runs")
             const sets = document.getElementById("sets")
             const socket = io();
+            const requestDiv = document.getElementById("requests");
+            const deckElement = document.getElementById("deckImg")
+            const winConditions = document.getElementById("winConditions")
             let state;
             socket.emit("test", "socket connected!")
 
-            var imgLinks = {
+            const imgLinks = {
                 // Spades
                 "Ace of Spades": "{{ url_for('static', filename='cards/ace_of_spades.svg') }}",
                 "Two of Spades": "{{ url_for('static', filename='cards/2_of_spades.svg') }}",
@@ -90,9 +92,15 @@
                 "King of Clubs": "{{ url_for('static', filename='cards/king_of_clubs2.svg') }}"
            };
 
+            const inverseImgLinks = {};
+
+            for (const [cardName, imgUrl] of Object.entries(imgLinks)) {
+              inverseImgLinks["http://localhost:5000" + imgUrl] = cardName;
+            }
 
 
-
+            discardElement.setAttribute("src",imgLinks["Ace of Spades"])
+            discardElement.style.opacity = "0.0"
              socket.on("game_state", function (ans) {
                     state = ans;
                     console.log(`got the state : ${JSON.stringify(state)}`)
@@ -102,12 +110,16 @@
                 // Updates the game ui with the info from the state
                 // updating the round counter
                 round.innerText = "Runda: " + state["round"].toString()
+                if (state["winConditions"]["runs"] === null) {state["winConditions"]["runs"] = 0}
+                else if(state["winConditions"]["sets"]){state["winConditions"]["sets"] = 0}
+                winConditions.innerText = "Korta :" + state["winConditions"]["sets"] + ", Långa: " + state["winConditions"]["runs"];
 
                 //update discard
                 if (state["discardDeck"].length > 0) {
-                    discardElement.setAttribute("src", imgLinks[state["discardDeck"][0]]);
+                    discardElement.setAttribute("src", imgLinks[state["discardDeck"][state["discardDeck"].length - 1]]);
+                    discardElement.style.opacity = "1"
                 }
-                else {discardElement.setAttribute("src","")}
+                else {discardElement.style.opacity = "0.1"}
 
                 // updating hand
                 hand.replaceChildren();
@@ -119,27 +131,65 @@
                     hand.appendChild(img);
                 }
                 updateOtherPlayerInfo();
-                if (state["declaredCards"][playerID] != null){
-                    updateDeclaredCards();
-                }
+                updateDeclaredCards();
+
             }
+
             function updateDeclaredCards(){
-                const declaredRuns = state["declaredCards"][playerID]["runs"];
                 runs.replaceChildren();
+                sets.replaceChildren();
+                if (state["declaredCards"][playerID] === null){
+                        return
+                }
+                const declaredRuns = state["declaredCards"][playerID]["runs"];
+                const declaredSets = state["declaredCards"][playerID]["sets"];
+
+
+                for (let i = 0; i < declaredSets.length; i++) {
+                    let card = declaredSets[i][0];
+                    let p = document.createElement("p")
+                    let div = document.createElement("div")
+                    p.innerText = `${declaredSets[i].length.toString()} x `;
+                    div.appendChild(p)
+                    let img = document.createElement("img");
+                    img.src = imgLinks[card];
+                    img.classList.add("declaredCards");
+                    div.appendChild(img);
+                    sets.appendChild(div);
+                }
+
+                // setting the runs
+                for (const declaredRun of declaredRuns) {
+                    let firstCard = declaredRun[0];
+                    let lastCard = declaredRun[declaredRun.length - 1]
+                    let p = document.createElement("p")
+                    let div = document.createElement("div")
+                    let img = document.createElement("img");
+                    // adding the first card in the run
+                    img.src = imgLinks[firstCard];
+                    img.classList.add("declaredCards");
+                    div.appendChild(img);
+                    p.innerText = "➡️";
+                    div.appendChild(p)
+
+                    // adding the last card in the run.
+                    let img2 = document.createElement("img");
+                    img2.src = imgLinks[lastCard];
+                    img2.classList.add("declaredCards");
+                    div.appendChild(img2);
+                    runs.appendChild(div);
+                }
+
+                /**
                 for (const card of declaredRuns) {
                     let img = document.createElement("img");
                     img.src = imgLinks[card];
                     img.classList.add("declaredCards");
                     runs.appendChild(img);
                 }
-                sets.replaceChildren();
-                const declaredSets = state["declaredCards"][playerID]["sets"];
-                for (const card of declaredSets) {
-                    let img = document.createElement("img");
-                    img.src = imgLinks[card];
-                    img.classList.add("declaredCards");
-                    sets.appendChild(img);
-                }
+
+                    */
+
             }
 
             function updateOtherPlayerInfo(){
@@ -157,32 +207,28 @@
                 if (playerID !== data["agentID"]){
                     return
                 }
-                console.log("handling uiAgent:", agentID);
+                console.log("handling uiAgent logic");
 
-                agent_request(request, agentID, function(action) {
-                    console.log(`${agentID} svarar med ${action.response.toString()} skickar till servern"`);
+                agent_request(request, playerID, function(action) {
+                    console.log(`${playerID} svarar med ${action.response.toString()} skickar till servern"`);
                     socket.emit("uiAgentResponse", JSON.stringify(action));
                 });
             })
 
             function agent_request(type, id, callback) {
-                let infoDiv = document.getElementById(id).querySelector("div");
-                var ptag = document.createElement("p");
+                let ptag = document.createElement("p");
                 let textContent = {
-                    card2Play: "Index av kort att spela",
+                    card2Play: "Tryck på kort att spela",
                     layCard: "ID av agent kort ska läggas på",
-                    take_discard: "Discard är tom, tryck nej "
+                    take_discard: "Vilken hög vill du ta ifrån?"
                 }
-                if (state["discardDeck"] && state["discardDeck"].length > 0){
-                    textContent["take_discard"] = "ta " + state["discardDeck"][0].toString()
-                }
+
                 ptag.textContent = textContent[type];
-                infoDiv.appendChild(ptag)
+                requestDiv.appendChild(ptag)
                 let response = {"agentID": id, "response": "yes"}
                 if (type !== "card2Play" && type !== "layCard") {
-                    // gets the player div
-                    var yesBtn = document.createElement("button");
-                    var noBtn = document.createElement("button");
+                    const yesBtn = document.createElement("button");
+                    const noBtn = document.createElement("button");
 
                     yesBtn.textContent = "Ja";
                     noBtn.textContent = "Nej";
@@ -198,7 +244,22 @@
                         yesBtn.remove();
                         noBtn.remove();
                         ptag.remove();
+                        discardElement.onclick = function (){};
+                        deckElement.onclick = function (){};
+
                     }
+
+                    deckElement.onclick = function (){
+                        response["response"] = "no"
+                        callback(response);
+                        yesBtn.remove();
+                        noBtn.remove();
+                        ptag.remove();
+                        deckElement.onclick = function (){};
+                        discardElement.onclick = function (){};
+
+                    }
+
                     noBtn.onclick = function () {
                         response["response"] = "no"
                         callback(response);
@@ -207,11 +268,23 @@
                         ptag.remove();
 
                     }
-                    let infoDiv = document.getElementById(id).querySelector("div");
-                    infoDiv.appendChild(yesBtn);
-                    infoDiv.appendChild(noBtn);
+                    requestDiv.appendChild(yesBtn);
+                    requestDiv.appendChild(noBtn);
                 }
                 else if(type === "card2Play"){
+                    function onCardClick(element){
+                        let cardName = inverseImgLinks[element.src]
+                        response["response"] = state["playerHands"][playerID].indexOf(cardName)
+                        callback(response)
+                        submitButton.remove();
+                        inputBox.remove();
+                        ptag.remove();
+                    }
+                    for (const child of hand.children) {
+                        child.addEventListener('click', function () {
+                            onCardClick(child)
+                        });
+                    }
                     let inputBox = document.createElement("input")
                     inputBox.type = "text";
                     let submitButton = document.createElement("button");
@@ -226,24 +299,27 @@
                         inputBox.remove();
                         ptag.remove();
                     }
-                    infoDiv.appendChild(inputBox);
-                    infoDiv.appendChild(submitButton);
+                    requestDiv.appendChild(inputBox);
+                    requestDiv.appendChild(submitButton);
                 }
             }
+
         });
 
     </script>
 </head>
 <body>
-    <span>
-        <h1 id="round"></h1>
-    </span>
+    <header>
+        <span id="round"></span>
+        <span id="winConditions">10</span>
+    </header>
+
     <div id="parent">
             <div id="deckDaddy">
                 <img src="" id="discardImg" alt="">
-                <img id="deckImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Card_back_01.svg/1200px-Card_back_01.svg.png" draggable="false">
+                <img id="deckImg" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Card_back_01.svg/1200px-Card_back_01.svg.png" draggable="false" alt="">
             </div>
-        <h>Kort:</h>
+        <h1>Kort:</h1>
         <div id="hand">
         </div>
         <div id="otherPlayers">
@@ -267,19 +343,20 @@
                 <p></p>
             </div>
         </div>
-    </div>
-    <div id="requests">
+        <div id="declaredCards">
 
-    </div>
-    <div id="declaredCards">
-        runs:
         <div id="runs">
 
         </div>
-        sets:
+
         <div id="sets">
 
         </div>
     </div>
+    </div> <!-- parent !-->
+    <div id="requests">
+
+    </div>
+
 </body>
 </html>

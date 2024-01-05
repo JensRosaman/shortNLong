@@ -1,7 +1,26 @@
 body{
     background-color: dimgrey;
 }
+header {
+    display: flex;
+    align-items: center;
+    height: 10vh;
+    background-color: cadetblue;
+}
 
+#round{
+    background-color: lightblue;
+    border-radius: 50%;
+    padding: 10px;
+    margin-right: 50%;
+    margin-left: 50%;
+    position: absolute;
+}
+
+#winConditions {
+    margin-right: 10px;
+    margin-left: auto;
+        }
 #deckImg{
     width: 250px ;
     height: 350px;
@@ -52,9 +71,20 @@ body{
     height: fit-content;
 }
 
+#runs , #sets {
+    display: flex;
+    flex-direction: column;
+    text-align: start;
+
+}
+
+#runs , #sets > div {
+    display: flex;
+    flex-direction: row;
+
+}
 #requests{
     background-color: beige;
-    width: 100px;
-    height: 200px;
-
+    width: fit-content;
+    height: fit-content;
 }

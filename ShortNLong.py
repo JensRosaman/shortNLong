@@ -480,6 +480,7 @@ class Game:
         self.guiAgents = [agent.agentID for agent in playerIDS if "guiAgent" in agent.__dict__]
         self.playerScores = {}
         self.layMap = {}
+        
     def start_game(self):
         """Starts the gameplay loop"""
         # assing value to players list and start first round
@@ -553,7 +554,9 @@ class Game:
                     stateOfPlayer = self.get_current_state(agentOfCurrentPlayer) # updates the current state for the current player
 
                     # check if we want to declare
-                    if self.currentPlayer.__complete_hand__() and not (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0):
+                    if self.currentPlayer.__complete_hand__() and not (
+                            len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
+                        ):
                         if agentOfCurrentPlayer.request_declare(stateOfPlayer):
                             self.currentPlayer.declare_hand()
                             self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
@@ -572,6 +575,8 @@ class Game:
                             )
                             availableLays = self.can_lay_card_to_player(self.currentPlayer)
                             self.send_state()
+                    else:
+                        print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
                     # request what card to play n play it
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
                     self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
@@ -666,8 +671,15 @@ class Game:
                     validLays[agent]["runs"].append(card)
                 if player.valid_in_declared_set(card):
                     validLays[agent]["sets"].append(card)
-
         return {agent: {"runs": [card for card in validLays[agent]["runs"]],"sets": [card for card in validLays[agent]["sets"] ]} for agent in validLays if (len(validLays[agent]["runs"]) > 0 or len(validLays[agent]["sets"]) > 0)}
+
+    def card_valid_in_declared(self,card):
+        for agent in self.declaredCards:
+            player = self.players[agent]
+            if player.valid_in_declared_run(card) or player.valid_in_declared_set(card):
+                return True
+        return False
+
     def available_to_lay_cards_to(self):
         """Creates a dict with each agent and the players it can lay cards to
         Return agentThatCanLay:{agentThatItcanLayTo:"runs":[],"sets":[]}
@@ -741,27 +753,8 @@ class Game:
         requestingPlayer = self.players[playerId] # indexes the players dict for the instance of the requested player
         availableToLayTo = self.can_lay_card_to_player(requestingPlayer)
         """
-        self.state = {
-            "discard": self.discardDeck,#list[card]
-            "round": self.round,#int
-            "winConditions": self.current_win_conditions(),#dict
-            "playOrder": self._playOrder,# list[Player]
-            "currentPlayer": self.currentPlayer,# player
-            "isCurrentPlayer": self.currentPlayer == requestingPlayer, # bool
-            "hand": requestingPlayer.hand, # list[Card]
-            "winner": False,#bool
-            "currentScore": requestingPlayer.get_score(),#int
-            "takenCard": requestingPlayer.takenCard, #bool
-            "hasCompleteHand": requestingPlayer.__complete_hand__(), #bool
-            "runCount": requestingPlayer.run_count, # int
-            "setCount": requestingPlayer.set_count, # int
-            "completeSets": requestingPlayer.completedSets, #list[Card]
-            "completeRuns": requestingPlayer.completedRuns, # list[Card]
-            "declaredCards": {player.ID: self.declaredCard[player] for player in self.declaredCards},
-            "playerScore": self.calculate_points(player=requestingPlayer)
-        }
-        """
-        self.state = {
+        state = {
+            state = {
             "discard": [str(card) for card in self.discardDeck],  # list[str]
             "round": self.round,  # int
             "winConditions": self.current_win_conditions(),  # dict
@@ -781,7 +774,33 @@ class Game:
             "playerScore": self.calculate_points(player=requestingPlayer),
             "availableToLayTo": availableToLayTo #{agent.agentID: {"runs": str([availableToLayTo[agent]["runs"]]),"sets": str([availableToLayTo[agent]["sets"]])} for agent in availableToLayTo}
         }
-        return self.state
+        """
+
+        state = {
+            "discard": self.discardDeck,  # list[card]
+            "round": self.round,  # int
+            "winConditions": self.current_win_conditions(),  # dict
+            "playOrder": self._playOrder,  # list[Player]
+            "currentPlayer": self.currentPlayer,  # player
+            "isCurrentPlayer": self.currentPlayer == requestingPlayer,  # bool
+            "hand": requestingPlayer.hand,  # list[Card]
+            "winner": False,  # bool
+            "currentScore": requestingPlayer.get_score(),  # int
+            "takenCard": requestingPlayer.takenCard,  # bool
+            "hasCompleteHand": requestingPlayer.__complete_hand__(),  # bool
+            "runCount": requestingPlayer.run_count,  # int
+            "setCount": requestingPlayer.set_count,  # int
+            "completeSets": requestingPlayer.completedSets,  # list[Card]
+            "completeRuns": requestingPlayer.completedRuns,  # list[Card]
+            "declaredCards": {player: self.declaredCards[player] for player in self.declaredCards},
+            "playerScore": self.calculate_points(player=requestingPlayer),
+            "availableToLayTo": availableToLayTo,
+            "discardValidInDeclared": False
+
+        }
+        if len(self.discardDeck) > 0 and len(self.declaredCards) > 0:
+            state["discardValidInDeclared"] = self.card_valid_in_declared(self.discardDeck[-1])
+        return state
 
     def send_state(self):
         """sends a post http to the server with the game state"""
@@ -805,14 +824,15 @@ class Game:
             "playOrder": [agent.agentID for agent in self._playOrder],
             "round": self.round,
             "winConditions": self.current_win_conditions(),
-            "declaredCards": {agent.agentID: {"runs":[str(card) for cardList in self.declaredCards[agent]["runs"] for card in cardList],
-                                              "sets":[str(card) for cardList in self.declaredCards[agent]["sets"] for card in cardList]}
+            "declaredCards": {agent.agentID: {"runs":[[str(card) for card in cardList] for cardList in self.declaredCards[agent]["runs"]],
+                                              "sets":[[str(card) for card in cardList] for cardList in self.declaredCards[agent]["sets"]]}
                               for agent in self.declaredCards}, #{agent.agentID: str(card) for card in list for list in self.declaredCards[agent] for agent in self.declaredCards},
             "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
             "guiAgents": self.guiAgents,
             "discardDeck": [str(card) for card in self.discardDeck]
 
         }
+
         return state
 
 

@@ -161,9 +161,8 @@ class randAgent:
 
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
-        ans = bool(random.randint(0, 1))
-        print(self.agentID, " svarar med ", ans)
-        return ans
+        return bool(random.randint(0, 1))
+
     def request_lay_cards(self,state):
         """Requests an action asking what player to lay a card to"""
         availableToLayTo = state["availableToLayTo"]
@@ -183,7 +182,6 @@ class randAgent:
 
 class Mormor:
     """ serves as the template to create other agent classes of"""
-
     def __init__(self, agentID: int) -> None:
         self.agentID = agentID
 
@@ -205,11 +203,48 @@ class Mormor:
 
     def request_card2Play(self, state: dict) -> int:
         "Asks for the index of the card to play -> index int of played card"
-        if len(state["completeSets"]) > 0 and state["winConditions"]["runs"] > 0:
-            pass
+        def is_element_in_nested_list(element, nested_list):
+            for sublist in nested_list:
+                if isinstance(sublist, list):
+                    # If the element is in the sublist (recursive call)
+                    if is_element_in_nested_list(element, sublist):
+                        return True
+                else:
+                    # If the element is in the current sublist
+                    if sublist is element or sublist == element:
+                        return True
+            return False
+        lastCard = None
+        for card in state["hand"]:
+            if not is_element_in_nested_list(card,state["completeSets"]) or is_element_in_nested_list(card,state["completeRuns"]):
+                if card._point_value >= 10:
+                    return state["hand"].index(card)
+                lastCard = card
+            else:
+                continue
 
+        if len(state["completeSets"]) > 0 and state["winConditions"]["runs"] is not None:
+            pass
+        if lastCard is None:
+            return random.randint(0,len(state["hand"]) - 1)
+        return state["hand"].index(lastCard)
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
+        topDiscard = state["discard"][-1]
+        if self in state["declaredCards"]:
+            return False
+        if state["isCurrentPlayer"] and not (topDiscard._point_value >= 10):
+            for card in state["hand"]:
+                if state["winConditions"]["runs"] is not None:
+                    if (card._rank_value < topDiscard or
+                            topDiscard < card._rank_value
+                        ) and topDiscard._suit_value == card._suit_value:
+                        return True
+                else:
+                    if card._rank_value == topDiscard._rank_value:
+                        return True
+        else:
+            return False
 
 
     def request_lay_cards(self,state):
@@ -224,9 +259,8 @@ class Mormor:
 
         # return the first card in the sets list or the runs list
         if layToRun:
-            return {"layToRun": layToRun, "agentToLayTo": chosenAgent,
+            return {"layToRun": True, "agentToLayTo": chosenAgent,
                     "cardToLay": availableToLayTo[chosenAgent]["runs"][0]}
-        return {"layToRun": layToRun, "agentToLayTo": chosenAgent,
+        return {"layToRun": False, "agentToLayTo": chosenAgent,
                 "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
 
-     # agent never gets asked for take discard

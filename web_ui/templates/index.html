@@ -19,7 +19,6 @@
         document.addEventListener("DOMContentLoaded", function() {
             const round = document.getElementById("round");
             const discardElement = document.getElementById("discardImg")
-            const requestDiv = document.getElementById(id).querySelector("div");
 
             var socket = io();
             var state;
@@ -100,11 +99,13 @@
                 round.innerText = "Runda: " + state["round"].toString()
 
                 //update discard
-                if(state["discardDeck"].length > 0){discardElement.setAttribute("src",imgLinks[state["discardDeck"][0]]);}
-                else {discardElement.setAttribute("src","")}
+                if(state["discardDeck"].length > 0){
+                    discardElement.setAttribute("src", imgLinks[state["discardDeck"][state["discardDeck"].length - 1]]);
+                }
+                else {discardElement.style.opacity = "0"}
                 // updating player info
                 let parent = document.getElementById("parent")
-                for (var child of parent.children) {
+                for (let child of parent.children) {
                     let playerId = child.id;
                     let playerHand = state["playerHands"][playerId];
                     let handDiv = document.getElementById("hand" + playerId)
@@ -124,33 +125,59 @@
                     else{
                         child.style.backgroundColor = "darkgrey"
                     }
-                    if (state["declaredCards"][playerId] != null){
-                        updateDeclaredCards(playerId)
-                    }
+
+                    updateDeclaredCards(playerId)
+
                 }
 
             }
 
 
             function updateDeclaredCards(playerID){
-                const declaredRuns = state["declaredCards"][playerID]["runs"];
                 const runs = document.getElementById("runs" + playerID)
                 const sets = document.getElementById("sets" + playerID)
-
                 runs.replaceChildren();
-                for (const card of declaredRuns) {
-                    let img = document.createElement("img");
-                    img.src = imgLinks[card];
-                    img.classList.add("declaredCards");
-                    runs.appendChild(img);
-                }
                 sets.replaceChildren();
+                if (state["declaredCards"][playerID]["runs"] === null && state["declaredCards"][playerID]["sets"] === null){
+                        return
+                }
+                const declaredRuns = state["declaredCards"][playerID]["runs"];
                 const declaredSets = state["declaredCards"][playerID]["sets"];
-                for (const card of declaredSets) {
+
+                for (let i = 0; i < declaredSets.length; i++) {
+                    let card = declaredSets[i][0];
+                    let p = document.createElement("p")
+                    let div = document.createElement("div")
+                    p.innerText = `${declaredSets[i].length.toString()} x `;
+                    div.appendChild(p)
                     let img = document.createElement("img");
                     img.src = imgLinks[card];
                     img.classList.add("declaredCards");
-                    sets.appendChild(img);
+                    div.appendChild(img);
+                    sets.appendChild(div);
+
+                }
+
+                 // setting the runs
+                for (const declaredRun of declaredRuns) {
+                    let firstCard = declaredRun[0];
+                    let lastCard = declaredRun[declaredRun.length - 1]
+                    let p = document.createElement("p")
+                    let div = document.createElement("div")
+                    let img = document.createElement("img");
+                    // adding the first card in the run
+                    img.src = imgLinks[firstCard];
+                    img.classList.add("declaredCards");
+                    div.appendChild(img);
+                    p.innerText = "➡️";
+                    div.appendChild(p)
+
+                    // adding the last card in the run.
+                    let img2 = document.createElement("img");
+                    img2.src = imgLinks[lastCard];
+                    img2.classList.add("declaredCards");
+                    div.appendChild(img2);
+                    runs.appendChild(div);
                 }
             }
 
@@ -171,7 +198,9 @@
             })
 
             function agent_request(type, id, callback) {
-                var ptag = document.createElement("p");
+                let ptag = document.createElement("p");
+                const requestDiv = document.getElementById(id).querySelector("div");
+
                 let textContent = {
                     card2Play: "Index av kort att spela",
                     layCard: "ID av agent kort ska läggas på",
