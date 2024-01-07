@@ -111,6 +111,13 @@
                 // Updates the game ui with the info from the state
                 // updating the round counter
                 round.innerText = "Runda: " + state["round"].toString()
+                if (state["currentPlayer"] === playerID){
+                    document.querySelector("header").style.backgroundColor = "red";
+                }
+                else {
+                    document.querySelector("header").style.backgroundColor = "cadetblue";
+                }
+
                 if (state["winConditions"]["runs"] === null) {state["winConditions"]["runs"] = 0}
                 else if(state["winConditions"]["sets"]){state["winConditions"]["sets"] = 0}
                 winConditions.innerText = "Korta :" + state["winConditions"]["sets"] + ", Långa: " + state["winConditions"]["runs"];
@@ -120,7 +127,7 @@
                     discardElement.setAttribute("src", imgLinks[state["discardDeck"][state["discardDeck"].length - 1]]);
                     discardElement.style.opacity = "1"
                 }
-                else {discardElement.style.opacity = "0.1"}
+                else {discardElement.style.opacity = "0.1"};
 
                 // updating hand
                 hand.replaceChildren();
@@ -139,7 +146,12 @@
                 declaredCards.replaceChildren();
                 for (const agentID in state["declaredCards"]) {
                     if (state["declaredCards"].hasOwnProperty(agentID)) {
-                        const declaredDiv = getDeclaredDiv(agentID);
+                        const declaredDiv = document.createElement("div")
+                        const h = document.createElement("p");
+                        h.innerText = `${agentID}s kort:`
+
+                        declaredDiv.appendChild(h);
+                        declaredDiv.appendChild(getDeclaredDiv(agentID));
                         declaredDiv.id = "declaredCards" + agentID;
                         declaredDiv.classList.add("agentDeclared")
                         declaredCards.appendChild(declaredDiv)
@@ -317,6 +329,7 @@
 </head>
 <body>
     <header>
+
         <span id="round"></span>
         <span id="winConditions">10</span>
     </header>

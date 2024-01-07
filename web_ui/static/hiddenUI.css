@@ -75,13 +75,17 @@ header {
 .agentDeclared{
     background-color: darkmagenta;
     width: 20%;
-    height: 20%;
+    height: 50vh;
     display: flex;
     flex-direction: column;
+    text-decoration-color: aliceblue;
 }
 #declaredCards{
     display: flex;
     flex-direction: row;
+    height: 80vh;
+    width: 20vw;
+
 }
 
 #requests{

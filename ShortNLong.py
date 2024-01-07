@@ -481,6 +481,7 @@ class Game:
         self.playerScores = {}
         self.layMap = {}
         self.winningPlayer = None
+        self.turnLimit = 50
         
     def start_game(self):
         """Starts the gameplay loop"""
@@ -506,18 +507,20 @@ class Game:
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
-            turns = 0
+            turnCounter = 0
             print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
             # Gameplay loop for the different rounds
             notStopped = True
             while notStopped: # Stopping occurs when a player finishes their stick
-                #  print("loop started")
+                if turnCounter > self.turnLimit:
+                    break
+                # adding one to singify anither turn startin
+                turnCounter += 1
                 for agentOfCurrentPlayer in self._playOrder: # I am the agent obj of the current player mainloop
                     print(f"new turn starting current player is {agentOfCurrentPlayer.agentID}")
                     self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
                     self.currentPlayer.turn = True
                     self.layMap = self.available_to_lay_cards_to()
-                    i = 0
                     while True:  # loops until no one picks from discard or the players whose turn it is picks a card
                         # -------------------checks if anyone wants to pick from discard
                         self._check_deck()
@@ -582,12 +585,12 @@ class Game:
                     # request what card to play n play it
                     if (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
                         and len(self.currentPlayer.hand) <= 1
-                        ):
+                        ) or (turnCounter > self.turnLimit):
                         if len(self.currentPlayer.hand) == 1:
                             cardToPlay = self.currentPlayer.hand[0]
                             self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
                             self.send_state()
-
+                        print(turnCounter)
                         print(f"Game ended, the winner is {self.currentPlayer}")
                         3 / 0
                         break
@@ -596,7 +599,10 @@ class Game:
                     self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
                     self.send_state()
                     self.currentPlayer.takenCard = False
+
+
                     # next round starting
+# ---------------------------------------------------------------------------------------------
 
 
     def _prepare_for_next_round(self, cardsToHandOut):

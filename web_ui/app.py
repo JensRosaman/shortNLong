@@ -7,6 +7,7 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 socketio = SocketIO(app)
 app.static_folder = 'static'
+app.config['SERVER_NAME'] = 'localhost:5000'
 
 
 @app.route('/')
@@ -73,7 +74,7 @@ def test(data):
 
 def run_app():
     # , host="localhost"
-    socketio.run(app=app, debug=True, port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app=app,host="localhost",port="5000", debug=True, allow_unsafe_werkzeug=True)
 
 # 192.168.0.17
 
