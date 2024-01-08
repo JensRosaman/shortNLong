@@ -78,10 +78,8 @@ class ConsoleAgent:
                 return True
 
 
-
 class GuiAgent:
     """ serves as the template to create other agent classes of"""
-
     def __init__(self, agentID: int, apiUrl = "http://192.168.0.17:5000/") -> None:
         self.agentID = agentID
         self.url = apiUrl + 'request_agent'
@@ -132,8 +130,7 @@ class GuiAgent:
         return (requests.post(url=self.url, json=data)).json()
 
 
-
-class randAgent:
+class RandAgent:
     """ serves as the template to create other agent classes of"""
 
     def __init__(self, agentID: int) -> None:
@@ -251,7 +248,7 @@ class Mormor:
         """Requests an action asking what player to lay a card to"""
         availableToLayTo = state["availableToLayTo"]
         chosenAgent = random.choice(list(availableToLayTo))
-
+        print(state["completeSets"])
         if len(availableToLayTo[chosenAgent]["runs"]) > 0: # if run is available lay there
             layToRun = True
         else:

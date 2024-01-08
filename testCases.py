@@ -1,5 +1,5 @@
 from ShortNLong import *
-from agents import GuiAgent, randAgent, Mormor
+from agents import GuiAgent, RandAgent, Mormor
 from web_ui.app import url_for , app , socketio, run_app
 from dqn_agent import DQNAgent
 def d(lista):
@@ -25,17 +25,14 @@ def count_card_occurrences(listor):
 
 def start_game(guiagent=False):
     url = app.url_for("index",_external=True)
-    spelare = [1, 2, 3, 4, 5]
-    for i in spelare:
-        if guiagent:
-            if i == 2:
-                spelare[spelare.index(i)] = GuiAgent(agentID=i,apiUrl=url)
-                continue
-        spelare[spelare.index(i)] = Mormor(agentID=i)
 
-    spelare = [Mormor(1),Mormor(2),Mormor(3),Mormor(4),DQNAgent(5)]
+               #GuiAgent(agentID=i,apiUrl=url)
+
+    spelare = [Mormor(1),Mormor(2),Mormor(3),Mormor(4),RandAgent(5)]
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
+    score = spel.playerScores
+    print(score)
 def simulate_game():
 
         bob = GuiAgent(1)
