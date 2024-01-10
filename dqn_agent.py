@@ -1,15 +1,12 @@
 from typing import Dict, Any
-
 import numpy as np
 import random
-import pandas as pd
-
 import os
-
 from keras import Input, Model
-from keras.preprocessing.sequence import pad_sequences
+
 os.environ['KERAS_BACKEND'] = 'tensorflow'
-from keras.layers import Dense
+from keras import Input, Model
+from keras.layers import Dense , Masking
 from keras.optimizers import Adam
 from keras.models import Sequential, load_model
 from datetime import datetime
@@ -28,13 +25,13 @@ class DQNAgent:
         self.epsilon_min = 0.01  # Minimum epsilon value
         self.learning_rate = 0.001  # Learning rate for the neural network
 
-        self.inputSize = 9682 #9206 #5942 # 5942#4412 #5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + 290 + 1 + 1 # 223
+        self.inputSize = 14968#14786#9683 #9682 #9206 #5942 # 5942#4412 #5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + 290 + 1 + 1 # 223
         # Build the Q-network
         if False:#os.path.exists(fr"saved_models/{self.agentID}") and not buildNew:
             self.load_model(fr"saved_models/{self.agentID}")
         else:
             self.model = self.build_model()
-            self.save_model()
+           # self.save_model()
 
     def __hash__(self) -> int:
         return self.agentID
@@ -50,7 +47,10 @@ class DQNAgent:
     def build_model(self):
 
         input_layer = Input(shape=(self.inputSize,))
-        common_hidden = Dense(24, activation='relu')(input_layer)
+        masked_layer = Masking(mask_value=-1)(input_layer)
+
+        common_hidden = Dense(24, activation='relu')(masked_layer)
+
 
         # Output branch for declare action
         declare_output = Dense(1, activation='sigmoid', name='declare_output')(common_hidden)
@@ -60,6 +60,7 @@ class DQNAgent:
 
         # Output branch for take discard action
         take_discard_output = Dense(1, activation='sigmoid', name='take_discard_output')(common_hidden)
+
 
         model = Model(inputs=input_layer, outputs=[declare_output, action_output, take_discard_output])
         model.compile(loss=['binary_crossentropy', 'mse', 'binary_crossentropy'],
@@ -139,6 +140,8 @@ class DQNAgent:
         def one_hot_encode_suit(suit_value, num_suits):
             one_hot_vector = np.zeros(num_suits)
             one_hot_vector[suit_value] = 1
+            for i in range(9):
+               one_hot_vector = np.append(one_hot_vector,-1)
             return one_hot_vector
 
         def one_hot_encode_rank(rank_value, num_ranks):
@@ -165,7 +168,7 @@ class DQNAgent:
             one_hot_encoded_rank = one_hot_encode_rank(rank_value, num_ranks)
 
             # Concatenate suit and rank one-hot vectors
-            one_hot_encoded_card = np.concatenate((one_hot_encoded_suit, one_hot_encoded_rank), axis=None)
+            one_hot_encoded_card = np.array([one_hot_encoded_suit, one_hot_encoded_rank])
 
             return one_hot_encoded_card
 
@@ -192,12 +195,12 @@ class DQNAgent:
         player_score = state["playerScore"]
         complete_sets = [[card_to_numerical(card) for card in lst] for lst in state["completeSets"]]
         complete_runs = [[card_to_numerical(card) for card in lst] for lst in state["completeRuns"]]
+        discard_valid_in_declared = state["discardValidInDeclared"]
         declared_cards = {
-            player.id.AgentID: [card_to_numerical(card) for card in lst]
+            player.agentID: [[card_to_numerical(card) for card in lst["sets"]],[card_to_numerical(card) for card in lst["runs"]]]
             for player, lst in state["declaredCards"].items()
         }
         declared_cards_arr = [[item for sublist in declared_cards[key] for item in sublist] for key in declared_cards]
-        discard_valid_in_declared = state["discardValidInDeclared"]
 
         while len(declared_cards_arr) < 5:
             declared_cards_arr.append([])
@@ -211,33 +214,21 @@ class DQNAgent:
         while len(complete_runs) < 4:
             complete_runs.append([])
         for lst in complete_runs:
-            lenOfRuns = len(lst)
-            if lenOfRuns < 14:
-                numCardsToAdd = 14 - lenOfRuns
-                for i in range(numCardsToAdd):
-                    lst.append(card_to_numerical(None))
+            while len(lst) < 9:
+                lst.append(card_to_numerical(None))
         complete_runs = complete_runs[:4]
 
-        while len(complete_sets) < 27:
+        while len(complete_sets) < 27: # sometimes contains an sub extra array
             complete_sets.append([])
         for lst in complete_sets:
-            lenOfSets = len(lst)
-            if lenOfSets < 8:
-                numCardsToAdd = 8 - lenOfSets
-                for i in range(numCardsToAdd):
-                    lst.append(card_to_numerical(None))
-        print(f"Shape of round_number: {round_number.shape}")
+            while len(lst) < 9:
+                lst.append(card_to_numerical(None))
+
         print(f"Shape of numerical_discard: {np.concatenate(numerical_discard).shape}")
-        print(f"Shape of win_conditions: {win_conditions.shape}")
-        print(f"Shape of play_order: {np.array(play_order).shape}")
-        print(f"Shape of current_player: {np.array([current_player]).shape}")
-        print(f"Shape of is_current_player: {np.array([int(is_current_player)]).shape}")
         print(f"Shape of numerical_hand: {np.concatenate(numerical_hand).shape}")
         print(f"Shape of current_score: {np.array([current_score]).shape}")
         print(f"Shape of taken_card: {np.array([taken_card]).shape}")
         print(f"Shape of has_complete_hand: {np.array([int(has_complete_hand)]).shape}")
-        print(f"Shape of run_count: {np.array([run_count]).shape}")
-        print(f"Shape of set_count: {np.array([set_count]).shape}")
         print(f"Shape of complete_sets: {np.array(complete_sets).shape}")
         print(f"Shape of complete_runs: {np.array(complete_runs).shape}")
         print(f"Shape of declared_cards_arr: {np.array(declared_cards_arr).shape}")
@@ -271,7 +262,7 @@ class DQNAgent:
         reshapedVector = np.reshape(state_vector, (1,-1 )) # 4412
         print(reshapedVector)
         print(np.shape(reshapedVector))
-        return reshapedVector
+        return reshapedVector.astype("float64")
 
         """
         s = {
@@ -301,5 +292,5 @@ class DQNAgent:
 
 
 
-ValueError: Failed to convert a NumPy array to a Tensor (Unsupported object type float).
+#ValueError: Failed to convert a NumPy array to a Tensor (Unsupported object type float).
 

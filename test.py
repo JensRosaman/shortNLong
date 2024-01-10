@@ -5,4 +5,3 @@ def f():
     print("hej")
 
 
-f

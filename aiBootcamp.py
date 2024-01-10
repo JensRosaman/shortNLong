@@ -9,16 +9,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Trainer:
-    def __init__(self, agents):
+    def __init__(self, agents=None):
+        if agents is None:
+            agents = [DQNAgent(1), DQNAgent(2), DQNAgent(3), DQNAgent(4), DQNAgent(5)]
         self.agents = agents
         self.game = Game(playerIDS=agents)
-        self.epochs = 15
+        self.epochs = 3
         self.totalScores = {agent: 0 for agent in self.agents}
-
         pass
 
     def train_agents(self):
-        for i in range(50):
+        for i in range(2):
             self.totalScores = {agent: [] for agent in self.agents}
             for j in range(self.epochs):
                 if self.game.start_game(): # game has ended
@@ -77,6 +78,8 @@ if __name__ == "__main__":
     # start_game()
     # simulate_game()
     # bob = HumanAgent(1)
-    start_training()
+    #start_training()
+    trainer = Trainer()
+    trainer.train_agents()
 
 
