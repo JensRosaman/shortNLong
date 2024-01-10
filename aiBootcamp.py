@@ -1,41 +1,63 @@
+import keras
+
 from ShortNLong import *
 from agents import GuiAgent, RandAgent, Mormor
 from web_ui.app import url_for, app, socketio, run_app
 from dqn_agent import DQNAgent
 from operator import itemgetter
+import numpy as np
+import matplotlib.pyplot as plt
+
 class Trainer:
     def __init__(self, agents):
         self.agents = agents
         self.game = Game(playerIDS=agents)
         self.epochs = 15
+        self.totalScores = {agent: 0 for agent in self.agents}
+
         pass
 
     def train_agents(self):
+        for i in range(50):
+            self.totalScores = {agent: [] for agent in self.agents}
+            for j in range(self.epochs):
+                if self.game.start_game(): # game has ended
+                    self.reward_agents()
+                    self.update_total_scores()
+                    # logic for training each agent for next epoch
+            bestModel = self.get_best_agent()
+            self.agents = [agent.set_weights(bestModel.get_weights()) for agent in self.agents if agent is not bestModel]
+            self.plot_img(self.totalScores[bestModel])
 
-        for i in range(self.epochs):
-            if self.game.start_game(): # game has ended
-                self.reward_agents()
-                # logic for training each agent for next epoch
-        bestModel = self.get_best_agent()
+    def update_total_scores(self):
+        for agent in self.agents:
+            self.totalScores[agent].append(self.game.playerScores[agent])
 
-    def get_best_agent(self):
+
+    def get_best_agent(self) -> keras.Model:
         highestScore = [0,0]
-        for agent , score in self.game.playerScores:
+        averageScore  = {agent:np.sum(self.totalScores[agent]) / 4 for agent in self.totalScores}
+        for agent, score in averageScore :
             if score > highestScore[1]:
                 highestScore[1] = score
                 highestScore[0] = agent
-        return max(self.game.playerScores.iteritems(), key=self.game.playerScores.itemgetter(1))[0]
+        return max(averageScore.items(), key=lambda x: x[1])[0]
 
     def reward_agents(self):
         pass
+
     def reset(self):
         self.game = Game(playerIDS=self.agents)
 
+    def plot_img(self, yValues, name=random.randint(0, 50)):
+        xValues = range(1,len(yValues))
+        plt.plot(xValues, yValues)
 
-
-
-
-
+        plt.xlabel('GameX')
+        plt.ylabel('score')
+        plt.title('hej')
+        plt.savefig('plots/line_graph.png')
+        plt.close()
 
 def start_training(guiagent=False):
     url = app.url_for("index", _external=True)
