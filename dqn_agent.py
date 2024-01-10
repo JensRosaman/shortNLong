@@ -28,7 +28,7 @@ class DQNAgent:
         self.epsilon_min = 0.01  # Minimum epsilon value
         self.learning_rate = 0.001  # Learning rate for the neural network
 
-        self.inputSize = 4922 #4412 #5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + 290 + 1 + 1 # 223
+        self.inputSize = 9682 #9206 #5942 # 5942#4412 #5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + 290 + 1 + 1 # 223
         # Build the Q-network
         if False:#os.path.exists(fr"saved_models/{self.agentID}") and not buildNew:
             self.load_model(fr"saved_models/{self.agentID}")
@@ -130,6 +130,7 @@ class DQNAgent:
     def request_take_discard(self, state: dict) -> bool:
         # Implement your logic for taking a discard using DQN
         # For example, if the model predicts taking the discard with a probability greater than 0.5
+
         return self.model.predict(self.preprocess_state(state))[2] > 0.5
 
     def preprocess_state(self, state: dict) -> np.ndarray:
@@ -177,7 +178,8 @@ class DQNAgent:
         numerical_discard = [card_to_numerical(card) for card in state["discard"]]
         while len(numerical_discard) < 70:
             numerical_discard.insert(0, card_to_numerical(None))
-        win_conditions = np.array(state["winConditions"]["sets"], state["winConditions"]["runs"])
+        numerical_discard = numerical_discard[:70]
+        win_conditions = np.array((state["winConditions"]["sets"], state["winConditions"]["runs"]))
         play_order = [one_hot_encode_int(player.agentID,5) for player in state["playOrder"]]
         current_player = one_hot_encode_int(state["currentPlayer"].id.agentID,5)
         is_current_player = state["isCurrentPlayer"]
@@ -195,20 +197,18 @@ class DQNAgent:
             for player, lst in state["declaredCards"].items()
         }
         declared_cards_arr = [[item for sublist in declared_cards[key] for item in sublist] for key in declared_cards]
+        discard_valid_in_declared = state["discardValidInDeclared"]
 
         while len(declared_cards_arr) < 5:
             declared_cards_arr.append([])
         for lst in declared_cards_arr:
             while len(lst) < 29:
                 lst.append(card_to_numerical(None))
-        discard_valid_in_declared = state["discardValidInDeclared"]
-        lenOfHand = len(numerical_hand)
-        if lenOfHand < 20:
-            numCardsToAdd = 20 - lenOfHand
-            for i in range(numCardsToAdd):
-                numerical_hand.append(card_to_numerical(None))
 
-        while len(complete_runs) < 2:
+        while len(numerical_hand) < 80:
+            numerical_hand.append(card_to_numerical(None))
+
+        while len(complete_runs) < 4:
             complete_runs.append([])
         for lst in complete_runs:
             lenOfRuns = len(lst)
@@ -216,9 +216,9 @@ class DQNAgent:
                 numCardsToAdd = 14 - lenOfRuns
                 for i in range(numCardsToAdd):
                     lst.append(card_to_numerical(None))
+        complete_runs = complete_runs[:4]
 
-
-        while len(complete_sets) < 3:
+        while len(complete_sets) < 27:
             complete_sets.append([])
         for lst in complete_sets:
             lenOfSets = len(lst)
@@ -254,7 +254,7 @@ class DQNAgent:
             np.array(play_order),  # 5
             np.array([current_player]), # 5
             np.array([int(is_current_player)]), # 1
-            np.concatenate(numerical_hand),# 20
+            np.concatenate(numerical_hand),# 20 * 2
             np.array([current_score]),# 1
             np.array([taken_card]),# 1
             np.array([int(has_complete_hand)]), # 1
@@ -301,4 +301,5 @@ class DQNAgent:
 
 
 
+ValueError: Failed to convert a NumPy array to a Tensor (Unsupported object type float).
 

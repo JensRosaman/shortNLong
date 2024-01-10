@@ -64,8 +64,8 @@ def start_training(guiagent=False):
 
     # GuiAgent(agentID=i,apiUrl=url)
 
-    spelare = [Mormor(1), Mormor(2), Mormor(3), Mormor(4), DQNAgent(5)]
-    spel = Game(playerIDS=spelare, guiActive=guiagent, appUrl=url)
+    spelare = [DQNAgent(1), DQNAgent(2), DQNAgent(3), DQNAgent(4), DQNAgent(5)]
+    spel = Game(playerIDS=spelare)
     spel.start_game()
     score = spel.playerScores
     print(score)
@@ -77,6 +77,6 @@ if __name__ == "__main__":
     # start_game()
     # simulate_game()
     # bob = HumanAgent(1)
-    start_training(True)
+    start_training()
 
 
