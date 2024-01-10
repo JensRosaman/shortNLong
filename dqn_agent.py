@@ -1,3 +1,5 @@
+from typing import Dict, Any
+
 import numpy as np
 import random
 import pandas as pd
@@ -5,7 +7,7 @@ import pandas as pd
 import os
 
 from keras import Input, Model
-
+from keras.preprocessing.sequence import pad_sequences
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 from keras.layers import Dense
 from keras.optimizers import Adam
@@ -18,7 +20,6 @@ class DQNAgent:
 
 
         # Define DQN parameters
-        self.state_size =  18  # Define the size of the state space
         self.action_size = 2  # Define the size of the action space
         self.memory = []  # Use this to store experiences for experience replay
         self.gamma = 0.95  # Discount factor
@@ -27,11 +28,13 @@ class DQNAgent:
         self.epsilon_min = 0.01  # Minimum epsilon value
         self.learning_rate = 0.001  # Learning rate for the neural network
 
+        self.inputSize = 4922 #4412 #5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + 290 + 1 + 1 # 223
         # Build the Q-network
-        if os.path.exists(fr"saved_models/{self.agentID}") and not buildNew:
+        if False:#os.path.exists(fr"saved_models/{self.agentID}") and not buildNew:
             self.load_model(fr"saved_models/{self.agentID}")
         else:
             self.model = self.build_model()
+            self.save_model()
 
     def __hash__(self) -> int:
         return self.agentID
@@ -45,24 +48,24 @@ class DQNAgent:
         return False
 
     def build_model(self):
-        def build_model(self):
-            input_layer = Input(shape=(your_input_size,))
-            common_hidden = Dense(24, activation='relu')(input_layer)
 
-            # Output branch for declare action
-            declare_output = Dense(1, activation='sigmoid', name='declare_output')(common_hidden)
+        input_layer = Input(shape=(self.inputSize,))
+        common_hidden = Dense(24, activation='relu')(input_layer)
 
-            # Output branch for lay cards and card2Play actions
-            action_output = Dense(self.action_size, activation='linear', name='action_output')(common_hidden)
+        # Output branch for declare action
+        declare_output = Dense(1, activation='sigmoid', name='declare_output')(common_hidden)
 
-            # Output branch for take discard action
-            take_discard_output = Dense(1, activation='sigmoid', name='take_discard_output')(common_hidden)
+        # Output branch for lay cards and card2Play actions
+        action_output = Dense(self.action_size, activation='linear', name='action_output')(common_hidden)
 
-            model = Model(inputs=input_layer, outputs=[declare_output, action_output, take_discard_output])
-            model.compile(loss=['binary_crossentropy', 'mse', 'binary_crossentropy'],
-                          optimizer=Adam(learning_rate=self.learning_rate, clipnorm=1.0, clipvalue=0.5))
+        # Output branch for take discard action
+        take_discard_output = Dense(1, activation='sigmoid', name='take_discard_output')(common_hidden)
 
-            return model
+        model = Model(inputs=input_layer, outputs=[declare_output, action_output, take_discard_output])
+        model.compile(loss=['binary_crossentropy', 'mse', 'binary_crossentropy'],
+                      optimizer=Adam(learning_rate=self.learning_rate, clipnorm=1.0, clipvalue=0.5))
+
+        return model
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -74,7 +77,8 @@ class DQNAgent:
         act_values = self.model.predict(state)
         return np.argmax(act_values[0])
 
-    def replay(self, batch_size):
+    def replay(self):
+        batch_size = 1
         # Experience replay
         minibatch = random.sample(self.memory, batch_size)
         for state, action, reward, next_state, done in minibatch:
@@ -87,9 +91,10 @@ class DQNAgent:
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
 
+
     def save_model(self, file_path=None):
         if file_path is None:
-            file_path = fr"saved_models/{self.agentID}"# {datetime.now()}"
+            file_path = fr"saved_models/{self.agentID}.keras"# {datetime.now()}"
         # Save the model to a file
         self.model.save(file_path)
 
@@ -101,8 +106,23 @@ class DQNAgent:
         # For example, if the model predicts declaring with a probability greater than 0.5
         return self.model.predict(self.preprocess_state(state))[0][0] > 0.5
 
-    def request_lay_cards(self,state) -> int:
-        return self.act(self.preprocess_state(state))
+    def request_lay_cards(self,state) -> dict[str, bool | Any] | dict[str, bool | Any]:
+        """Requests an action asking what player to lay a card to"""
+        availableToLayTo = state["availableToLayTo"]
+        chosenAgent = random.choice(list(availableToLayTo))
+        print(state["completeSets"])
+        if len(availableToLayTo[chosenAgent]["runs"]) > 0:  # if run is available lay there
+            layToRun = True
+        else:
+            layToRun = False
+
+        # return the first card in the sets list or the runs list
+        if layToRun:
+            return {"layToRun": True, "agentToLayTo": chosenAgent,
+                    "cardToLay": availableToLayTo[chosenAgent]["runs"][0]}
+        return {"layToRun": False, "agentToLayTo": chosenAgent,
+                "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
+
     def request_card2Play(self, state: dict) -> int:
         # Implement your logic for choosing a card to play using DQN
         return self.act(self.preprocess_state(state))
@@ -110,11 +130,10 @@ class DQNAgent:
     def request_take_discard(self, state: dict) -> bool:
         # Implement your logic for taking a discard using DQN
         # For example, if the model predicts taking the discard with a probability greater than 0.5
-        return self.model.predict(self.preprocess_state(state))[0][1] > 0.5
+        return self.model.predict(self.preprocess_state(state))[2] > 0.5
 
     def preprocess_state(self, state: dict) -> np.ndarray:
-        # Implement state preprocessing if needed
-        # To Convert the state dictionary to a suitable input format for the neural ne
+        # To Convert the state dictionary to a vector
 
         def one_hot_encode_suit(suit_value, num_suits):
             one_hot_vector = np.zeros(num_suits)
@@ -123,7 +142,7 @@ class DQNAgent:
 
         def one_hot_encode_rank(rank_value, num_ranks):
             one_hot_vector = np.zeros(num_ranks)
-            one_hot_vector[rank_value] = 1
+            one_hot_vector[rank_value - 1] = 1
             return one_hot_vector
 
         def card_to_numerical(card):
@@ -154,11 +173,13 @@ class DQNAgent:
             one_hot_vector[currentInt - 1] = 1  # Subtract 1 to convert round number to index
             return one_hot_vector
 
-        round_number = one_hot_encode_int(state["round"])
+        round_number = one_hot_encode_int(state["round"],4)
         numerical_discard = [card_to_numerical(card) for card in state["discard"]]
+        while len(numerical_discard) < 70:
+            numerical_discard.insert(0, card_to_numerical(None))
         win_conditions = np.array(state["winConditions"]["sets"], state["winConditions"]["runs"])
-        play_order = [one_hot_encode_int(player.id.AgentID,5) for player in state["playOrder"]]
-        current_player = one_hot_encode_int(state["currentPlayer"].id.agentID)
+        play_order = [one_hot_encode_int(player.agentID,5) for player in state["playOrder"]]
+        current_player = one_hot_encode_int(state["currentPlayer"].id.agentID,5)
         is_current_player = state["isCurrentPlayer"]
         numerical_hand = [card_to_numerical(card) for card in state["hand"]]
         current_score = state["currentScore"]
@@ -166,38 +187,91 @@ class DQNAgent:
         has_complete_hand = state["hasCompleteHand"]
         run_count = state["runCount"]
         set_count = state["setCount"]
+        player_score = state["playerScore"]
         complete_sets = [[card_to_numerical(card) for card in lst] for lst in state["completeSets"]]
         complete_runs = [[card_to_numerical(card) for card in lst] for lst in state["completeRuns"]]
         declared_cards = {
             player.id.AgentID: [card_to_numerical(card) for card in lst]
             for player, lst in state["declaredCards"].items()
         }
-        player_score = state["playerScore"]
-        available_to_lay_to = state["availableToLayTo"]
-        discard_valid_in_declared = state["discardValidInDeclared"]
+        declared_cards_arr = [[item for sublist in declared_cards[key] for item in sublist] for key in declared_cards]
 
+        while len(declared_cards_arr) < 5:
+            declared_cards_arr.append([])
+        for lst in declared_cards_arr:
+            while len(lst) < 29:
+                lst.append(card_to_numerical(None))
+        discard_valid_in_declared = state["discardValidInDeclared"]
+        lenOfHand = len(numerical_hand)
+        if lenOfHand < 20:
+            numCardsToAdd = 20 - lenOfHand
+            for i in range(numCardsToAdd):
+                numerical_hand.append(card_to_numerical(None))
+
+        while len(complete_runs) < 2:
+            complete_runs.append([])
+        for lst in complete_runs:
+            lenOfRuns = len(lst)
+            if lenOfRuns < 14:
+                numCardsToAdd = 14 - lenOfRuns
+                for i in range(numCardsToAdd):
+                    lst.append(card_to_numerical(None))
+
+
+        while len(complete_sets) < 3:
+            complete_sets.append([])
+        for lst in complete_sets:
+            lenOfSets = len(lst)
+            if lenOfSets < 8:
+                numCardsToAdd = 8 - lenOfSets
+                for i in range(numCardsToAdd):
+                    lst.append(card_to_numerical(None))
+        print(f"Shape of round_number: {round_number.shape}")
+        print(f"Shape of numerical_discard: {np.concatenate(numerical_discard).shape}")
+        print(f"Shape of win_conditions: {win_conditions.shape}")
+        print(f"Shape of play_order: {np.array(play_order).shape}")
+        print(f"Shape of current_player: {np.array([current_player]).shape}")
+        print(f"Shape of is_current_player: {np.array([int(is_current_player)]).shape}")
+        print(f"Shape of numerical_hand: {np.concatenate(numerical_hand).shape}")
+        print(f"Shape of current_score: {np.array([current_score]).shape}")
+        print(f"Shape of taken_card: {np.array([taken_card]).shape}")
+        print(f"Shape of has_complete_hand: {np.array([int(has_complete_hand)]).shape}")
+        print(f"Shape of run_count: {np.array([run_count]).shape}")
+        print(f"Shape of set_count: {np.array([set_count]).shape}")
+        print(f"Shape of complete_sets: {np.array(complete_sets).shape}")
+        print(f"Shape of complete_runs: {np.array(complete_runs).shape}")
+        print(f"Shape of declared_cards_arr: {np.array(declared_cards_arr).shape}")
+        print(f"Shape of player_score: {np.array([player_score]).shape}")
+        print(f"Shape of discard_valid_in_declared: {np.array([int(discard_valid_in_declared)]).shape}")
+        ### CHANGE THE LOGIC FOR AVAILIBLETOLAY TO, AI IS NOW LOBOTOMIZED
+        #available_to_lay_to = state["availableToLayTo"]
+        # value size is
+        # 5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + (5*28) + 1 + 1
         state_vector = np.concatenate((
             round_number,
-            np.concatenate(numerical_discard),
-            win_conditions,
-            np.concatenate(play_order),  # Concatenate one-hot encoded play_order
-            np.array([current_player]),
-            np.array([int(is_current_player)]),
-            np.concatenate(numerical_hand),
-            np.array([current_score]),
-            np.array([taken_card]),
-            np.array([int(has_complete_hand)]),
-            np.array([run_count]),
-            np.array([set_count]),
-            np.array(complete_sets),
-            np.array(complete_runs),
-            np.concatenate([item for sublist in declared_cards.values() for item in sublist]),
+            np.concatenate(numerical_discard), # 140
+            win_conditions, # 2
+            np.array(play_order),  # 5
+            np.array([current_player]), # 5
+            np.array([int(is_current_player)]), # 1
+            np.concatenate(numerical_hand),# 20
+            np.array([current_score]),# 1
+            np.array([taken_card]),# 1
+            np.array([int(has_complete_hand)]), # 1
+            np.array([run_count]), # 1
+            np.array([set_count]), # 1
+            np.array(complete_sets), #
+            np.array(complete_runs), #
+            np.array(declared_cards_arr),
+            #np.concatenate([item for sublist in declared_cards.values() for item in sublist]),
             np.array([player_score]),
-            np.array([available_to_lay_to]),
+            #np.array([available_to_lay_to]),
             np.array([int(discard_valid_in_declared)])
         ), axis=None)
-
-        return state_vector
+        reshapedVector = np.reshape(state_vector, (1,-1 )) # 4412
+        print(reshapedVector)
+        print(np.shape(reshapedVector))
+        return reshapedVector
 
         """
         s = {

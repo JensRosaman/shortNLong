@@ -5,7 +5,12 @@ import requests
 from typing import List
 import json
 from Card import Card
+debug = False
 
+def print(txt):
+    if not debug:
+        pass
+    builtins.print(txt)
 class Deck:
     """Represents the deck on the table  """
     def __init__(self) -> None:
@@ -377,7 +382,7 @@ class Game:
 
             if self.round >= 4:
                 print("Game over!")
-                break
+                return True
 
             # preparing the game for the next round
             
@@ -463,8 +468,8 @@ class Game:
                             )
                             availableLays = self.can_lay_card_to_player(self.currentPlayer)
                             self.send_state()
-                    else:
-                        print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
+                    #else:
+                        #print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
                     # request what card to play n play it
                     if (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
                         and len(self.currentPlayer.hand) <= 1
@@ -475,7 +480,7 @@ class Game:
                             self.send_state()
                         print(turnCounter)
                         print(f"Game ended, the winner is {self.currentPlayer}")
-                        3 / 0
+                        notStopped = False
                         break
 
                     cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
@@ -494,7 +499,7 @@ class Game:
         self._hand_out_cards(cardsToHandOut)
 
     def _update_score_table(self):
-        # first time table is updated aka first round
+        # first time the table is updated aka first round
         if len(self.playerScores) == 0:
             self.playerScores = {agent: 0 for agent in self.playerIDs}
         else:
@@ -585,7 +590,7 @@ class Game:
             if len(validLays[agent]["sets"]) < 1:
                 validLays[agent]["sets"] = None
 
-        return {agent: {"runs": [card for card in validLays[agent]["runs"]],"sets": [card for card in validLays[agent]["sets"] ]} for agent in validLays if (len(validLays[agent]["runs"]) > 0 or len(validLays[agent]["sets"]) > 0)}
+        return {agent: {"runs": [card for card in validLays[agent]["runs"]],"sets": [card for card in validLays[agent]["sets"] ]} for agent in validLays if (validLays[agent]["runs"]) is not None and (len(validLays[agent]["runs"]) > 0 or (validLays[agent]["sets"] is not None and len(validLays[agent]["sets"]) > 0))}
 
     def card_valid_in_declared(self,card):
         for agent in self.declaredCards:
@@ -649,7 +654,7 @@ class Game:
     
     def reset_game(self, startAfter:bool):
 
-        for p in self.players:
+        for a, p in self.players:
             p.reset()
         self.deck = None
         self.players = {}
