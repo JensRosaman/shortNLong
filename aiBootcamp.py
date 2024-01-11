@@ -27,18 +27,18 @@ class Trainer:
                     self.update_total_scores()
                     # logic for training each agent for next epoch
             bestModel = self.get_best_agent()
-            self.agents = [agent.set_weights(bestModel.get_weights()) for agent in self.agents if agent is not bestModel]
+            self.agents = [agent.model.set_weights(bestModel.model.get_weights()) for agent in self.agents if agent is not bestModel]
             self.plot_img(self.totalScores[bestModel])
-
+        bestModel.save_model()
     def update_total_scores(self):
         for agent in self.agents:
             self.totalScores[agent].append(self.game.playerScores[agent])
 
 
-    def get_best_agent(self) -> keras.Model:
+    def get_best_agent(self) -> DQNAgent:
         highestScore = [0,0]
         averageScore  = {agent:np.sum(self.totalScores[agent]) / 4 for agent in self.totalScores}
-        for agent, score in averageScore :
+        for agent, score in averageScore.items():
             if score > highestScore[1]:
                 highestScore[1] = score
                 highestScore[0] = agent

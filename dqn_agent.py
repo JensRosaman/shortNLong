@@ -197,7 +197,10 @@ class DQNAgent:
         complete_runs = [[card_to_numerical(card) for card in lst] for lst in state["completeRuns"]]
         discard_valid_in_declared = state["discardValidInDeclared"]
         declared_cards = {
-            player.agentID: [[card_to_numerical(card) for card in lst["sets"]],[card_to_numerical(card) for card in lst["runs"]]]
+            player.agentID: [
+    [card_to_numerical(card) for card_set in lst["sets"] for card in card_set],
+    [card_to_numerical(card) for run in lst["runs"] for card in run]
+        ]        #[[card_to_numerical(card) for card in set for set in lst["sets"]],[card_to_numerical(card) for card in run for run in lst["runs"]]]
             for player, lst in state["declaredCards"].items()
         }
         declared_cards_arr = [[item for sublist in declared_cards[key] for item in sublist] for key in declared_cards]
@@ -224,7 +227,7 @@ class DQNAgent:
             while len(lst) < 9:
                 lst.append(card_to_numerical(None))
 
-        print(f"Shape of numerical_discard: {np.concatenate(numerical_discard).shape}")
+        """print(f"Shape of numerical_discard: {np.concatenate(numerical_discard).shape}")
         print(f"Shape of numerical_hand: {np.concatenate(numerical_hand).shape}")
         print(f"Shape of current_score: {np.array([current_score]).shape}")
         print(f"Shape of taken_card: {np.array([taken_card]).shape}")
@@ -233,7 +236,7 @@ class DQNAgent:
         print(f"Shape of complete_runs: {np.array(complete_runs).shape}")
         print(f"Shape of declared_cards_arr: {np.array(declared_cards_arr).shape}")
         print(f"Shape of player_score: {np.array([player_score]).shape}")
-        print(f"Shape of discard_valid_in_declared: {np.array([int(discard_valid_in_declared)]).shape}")
+        print(f"Shape of discard_valid_in_declared: {np.array([int(discard_valid_in_declared)]).shape}")"""
         ### CHANGE THE LOGIC FOR AVAILIBLETOLAY TO, AI IS NOW LOBOTOMIZED
         #available_to_lay_to = state["availableToLayTo"]
         # value size is

@@ -128,7 +128,8 @@ class Player:
                     ids.remove(id(card))
                 else:
                     sets[i].remove(card)
-
+        sets = [set(lst) for lst in sets]
+        sets = [list(st) for st in sets]
         # tar bort de sets som hade dubbletter
         sets = [lst for lst in sets if len(lst) >= 3]
 
@@ -231,6 +232,13 @@ class Player:
         if not isinstance(cards_to_add, list):
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
+        print(self.hand)
+        self.hand = set(self.hand)
+        print(self.hand)
+        self.hand = list(self.hand)
+        print(self.hand)
+
+        self.hand = [card for card in self.hand if card is not None]
         self.__complete_hand__()
     
     def remove_id(self, cardToRemove: Card):
