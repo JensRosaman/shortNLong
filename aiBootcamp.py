@@ -26,10 +26,10 @@ class Trainer:
                     self.reward_agents()
                     self.update_total_scores()
                     # logic for training each agent for next epoch
-            bestModel = self.get_best_agent()
-            self.agents = [agent.model.set_weights(bestModel.model.get_weights()) for agent in self.agents if agent is not bestModel]
-            self.plot_img(self.totalScores[bestModel])
-        bestModel.save_model()
+            bestAgent = self.get_best_agent()
+            self.agents = [agent.model.set_weights(bestAgent.model.get_weights()) for agent in self.agents if agent is not bestAgent]
+            self.plot_img(self.totalScores[bestAgent])
+        bestAgent.model.save_model()
     def update_total_scores(self):
         for agent in self.agents:
             self.totalScores[agent].append(self.game.playerScores[agent])
@@ -51,7 +51,7 @@ class Trainer:
         self.game = Game(playerIDS=self.agents)
 
     def plot_img(self, yValues, name=random.randint(0, 50)):
-        xValues = range(1,len(yValues))
+        xValues = range(1,len(yValues) + 1)
         plt.plot(xValues, yValues)
 
         plt.xlabel('GameX')

@@ -1,7 +1,7 @@
 from ShortNLong import *
 from agents import GuiAgent, RandAgent, Mormor
 from web_ui.app import url_for , app , socketio, run_app
-from dqn_agent import DQNAgent
+
 def d(lista):
     sets = {}
     for card in lista:
@@ -28,7 +28,7 @@ def start_game(guiagent=False):
 
                #GuiAgent(agentID=i,apiUrl=url)
 
-    spelare = [Mormor(1),Mormor(2),Mormor(3),Mormor(4),RandAgent(5)]
+    spelare = [Mormor(1),Mormor(2),Mormor(3),GuiAgent(agentID=4, apiUrl=url), GuiAgent(agentID=5, apiUrl=url)]
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
     score = spel.playerScores

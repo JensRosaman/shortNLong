@@ -225,6 +225,7 @@ class Mormor:
         if lastCard is None:
             return random.randint(0,len(state["hand"]) - 1)
         return state["hand"].index(lastCard)
+
     def request_take_discard(self, state: dict) -> bool:
         """Gets state of the game and returns ans"""
         topDiscard = state["discard"][-1]

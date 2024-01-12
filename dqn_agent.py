@@ -51,7 +51,6 @@ class DQNAgent:
 
         common_hidden = Dense(24, activation='relu')(masked_layer)
 
-
         # Output branch for declare action
         declare_output = Dense(1, activation='sigmoid', name='declare_output')(common_hidden)
 
@@ -61,11 +60,9 @@ class DQNAgent:
         # Output branch for take discard action
         take_discard_output = Dense(1, activation='sigmoid', name='take_discard_output')(common_hidden)
 
-
         model = Model(inputs=input_layer, outputs=[declare_output, action_output, take_discard_output])
         model.compile(loss=['binary_crossentropy', 'mse', 'binary_crossentropy'],
                       optimizer=Adam(learning_rate=self.learning_rate, clipnorm=1.0, clipvalue=0.5))
-
         return model
 
     def remember(self, state, action, reward, next_state, done):
@@ -91,7 +88,6 @@ class DQNAgent:
             self.model.fit(state, target_f, epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-
 
     def save_model(self, file_path=None):
         if file_path is None:
@@ -136,7 +132,6 @@ class DQNAgent:
 
     def preprocess_state(self, state: dict) -> np.ndarray:
         # To Convert the state dictionary to a vector
-
         def one_hot_encode_suit(suit_value, num_suits):
             one_hot_vector = np.zeros(num_suits)
             one_hot_vector[suit_value] = 1
