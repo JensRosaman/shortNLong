@@ -34,8 +34,6 @@ def post_game_state():
             return jsonify(data)
         return jsonify({'status': 'error', 'message': 'No data available for GET request'})
 
-
-
 @app.route("/request_agent", methods = ["POST", "GET"])
 def request_agent():
         if request.method == "POST":

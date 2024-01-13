@@ -403,104 +403,113 @@ class Game:
             self.round += 1 # next turn starting
             for k, l in self.players.items():
                 l.turn = self.round
-            turnCounter = 0
             print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
             # Gameplay loop for the different rounds
-            notStopped = True
-            while notStopped: # Stopping occurs when a player finishes their stick
-                if turnCounter > self.turnLimit:
-                    break
-                # adding one to singify anither turn startin
-                turnCounter += 1
-                for agentOfCurrentPlayer in self._playOrder: # I am the agent obj of the current player mainloop
-                    print(f"new turn starting current player is {agentOfCurrentPlayer.agentID}")
-                    self.currentPlayer = self.players[agentOfCurrentPlayer] # indexs players after the id - gives the player object of the current player
-                    self.currentPlayer.turn = True
-                    self.layMap = self.available_to_lay_cards_to()
-                    while True:  # loops until no one picks from discard or the players whose turn it is picks a card
-                        # -------------------checks if anyone wants to pick from discard
-                        self._check_deck()
-                        self.send_state()
+            self._round_loop()
 
-                        if len(self.discardDeck) <= 0:
-                            print(f"Discard is {self.discardDeck}, ending discard loop")
-                            break # cant take from empty deck
 
-                        agentToPick = self.discard_request(
-                            current_player_index=self._playOrder.index(agentOfCurrentPlayer))
-                        if agentToPick is None:
-                            print("no one picks")
-                            break
+    def _round_loop(self):
+        turnCounter = 0
+        notStopped = True
+        while notStopped:  # Stopping occurs when a player finishes their stick
+            if turnCounter > self.turnLimit:
+                return True
+            # adding one to singify anither turn startin
+            turnCounter += 1
 
-                        elif agentOfCurrentPlayer == agentToPick:
-                            if self.currentPlayer.takenCard:  # if player already have picked a card from discard then a penalty folows
-                                self.currentPlayer.add_card(self.deck.remove_card(top=True))
-                            self.currentPlayer.add_card(self.discardDeck[-1])
-                            self.currentPlayer.takenCard = True
-                            self.discardDeck.pop(-1)
-
-                        # if it isn't playerTopPicks turn - give penalty and loop again
-                        else:
-                            # hands cards to the penalized player
-                            self._take_discard(playerToPenalize=self.players[agentToPick])
-                        print(f"agent {agentToPick.agentID} picks from discard")
-                    # end of discard loop
+            for agentOfCurrentPlayer in self._playOrder:  # I am the agent obj of the current player mainloop
+                print(f"turn {turnCounter} starting, current player is {agentOfCurrentPlayer.agentID}")
+                self.currentPlayer = self.players[
+                    agentOfCurrentPlayer]  # indexs players after the id - gives the player object of the current player
+                self.currentPlayer.turn = True
+                self.layMap = self.available_to_lay_cards_to()
+                while True:  # loops until no one picks from discard or the players whose turn it is picks a card
+                    # -------------------checks if anyone wants to pick from discard
                     self._check_deck()
-                    # start of the turn of the current player - starts when picking up a card
-                    if not self.currentPlayer.takenCard and len(self.deck.deck) > 0:
-                        self.currentPlayer.add_card(self.deck.remove_card(top=True)) # takes the top card of the deck n adds it to hand
-                        self.currentPlayer.takenCard = True
-
                     self.send_state()
-                    stateOfPlayer = self.get_current_state(agentOfCurrentPlayer) # updates the current state for the current player
 
-                    # check if we want to declare
-                    if self.currentPlayer.__complete_hand__() and not (
-                            len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
-                        ):
-                        if agentOfCurrentPlayer.request_declare(stateOfPlayer):
-                            self.currentPlayer.declare_hand()
-                            self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
-                            print(f"{agentOfCurrentPlayer} deklarerar")
-                            self.send_state()
+                    if len(self.discardDeck) <= 0:
+                        print(f"Discard is {self.discardDeck}, ending discard loop")
+                        break  # cant take from empty deck
 
-                    elif (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0): # check if i
-                        availableLays = self.can_lay_card_to_player(self.currentPlayer)
-                        while len(list(availableLays)) > 0:
-                            stateOfPlayer = self.get_current_state(agentOfCurrentPlayer)  # updates the current state for the current player
-                            print(availableLays)
-                            layChoice = agentOfCurrentPlayer.request_lay_cards(stateOfPlayer)  # (agentID
-                            print(f"laychoice for {agentOfCurrentPlayer.agentID}  is ",layChoice)
-                            self.lay_cards(
-                                agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"], layToRun=layChoice["layToRun"], playerLaying=self.currentPlayer
-                            )
-                            availableLays = self.can_lay_card_to_player(self.currentPlayer)
-                            self.send_state()
-                    #else:
-                        #print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
-                    # request what card to play n play it
-                    if (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
-                        and len(self.currentPlayer.hand) <= 1
-                        ) or (turnCounter > self.turnLimit):
-                        if len(self.currentPlayer.hand) == 1:
-                            cardToPlay = self.currentPlayer.hand[0]
-                            self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
-                            self.send_state()
-                        print(turnCounter)
-                        print(f"Game ended, the winner is {self.currentPlayer}")
-                        notStopped = False
+                    agentToPick = self.discard_request(
+                        current_player_index=self._playOrder.index(agentOfCurrentPlayer))
+                    if agentToPick is None:
+                        print("no one picks")
                         break
 
-                    cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
-                    self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
-                    self.send_state()
-                    self.currentPlayer.takenCard = False
+                    elif agentOfCurrentPlayer == agentToPick:
+                        if self.currentPlayer.takenCard:  # if player already have picked a card from discard then a penalty folows
+                            self.currentPlayer.add_card(self.deck.remove_card(top=True))
+                        self.currentPlayer.add_card(self.discardDeck[-1])
+                        self.currentPlayer.takenCard = True
+                        self.discardDeck.pop(-1)
 
+                    # if it isn't playerTopPicks turn - give penalty and loop again
+                    else:
+                        # hands cards to the penalized player
+                        self._take_discard(playerToPenalize=self.players[agentToPick])
+                    print(f"agent {agentToPick.agentID} picks from discard")
+                # end of discard loop
+                self._check_deck()
+                # start of the turn of the current player - starts when picking up a card
+                if not self.currentPlayer.takenCard and len(self.deck.deck) > 0:
+                    self.currentPlayer.add_card(
+                        self.deck.remove_card(top=True))  # takes the top card of the deck n adds it to hand
+                    self.currentPlayer.takenCard = True
 
-                    # next round starting
-# ---------------------------------------------------------------------------------------------
+                self.send_state()
+                stateOfPlayer = self.get_current_state(
+                    agentOfCurrentPlayer)  # updates the current state for the current player
 
+                # check if we want to declare
+                if self.currentPlayer.__complete_hand__() and not (
+                        len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
+                ):
+                    if agentOfCurrentPlayer.request_declare(stateOfPlayer):
+                        self.currentPlayer.declare_hand()
+                        self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
+                        print(f"{agentOfCurrentPlayer} deklarerar")
+                        self.send_state()
 
+                elif (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(
+                        self.currentPlayer.declared["sets"]) > 0):  # check if i
+                    availableLays = self.can_lay_card_to_player(self.currentPlayer)
+                    while len(list(availableLays)) > 0:
+                        stateOfPlayer = self.get_current_state(
+                            agentOfCurrentPlayer)  # updates the current state for the current player
+                        print(availableLays)
+                        layChoice = agentOfCurrentPlayer.request_lay_cards(stateOfPlayer)  # (agentID
+                        print(f"laychoice for {agentOfCurrentPlayer.agentID}  is ", layChoice)
+                        self.lay_cards(
+                            agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"],
+                            layToRun=layChoice["layToRun"], playerLaying=self.currentPlayer
+                        )
+                        availableLays = self.can_lay_card_to_player(self.currentPlayer)
+                        self.send_state()
+                # else:
+                # print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
+                # request what card to play n play it
+                if (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
+                    and len(self.currentPlayer.hand) <= 1
+                ) or (turnCounter > self.turnLimit):
+                    if len(self.currentPlayer.hand) == 1:
+                        cardToPlay = self.currentPlayer.hand[0]
+                        self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
+                        self.send_state()
+                    print(turnCounter)
+                    print(f"Game ended, the winner is {self.currentPlayer}")
+                    notStopped = False
+                    break
+
+                cardToPlay = agentOfCurrentPlayer.request_card2Play(state=self.get_current_state(agentOfCurrentPlayer))
+                self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
+                self.send_state()
+                self.currentPlayer.takenCard = False
+
+                # next round starting
+
+    # ----------------------------------------------------------------------------------------------------------
     def _prepare_for_next_round(self, cardsToHandOut):
         self.deck = Deck()
         self.discardDeck.append(self.deck.remove_card(top=True))

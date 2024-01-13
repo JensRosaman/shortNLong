@@ -1,5 +1,4 @@
 import keras
-
 from ShortNLong import *
 from agents import GuiAgent, RandAgent, Mormor
 from web_ui.app import url_for, app, socketio, run_app
@@ -30,13 +29,14 @@ class Trainer:
             self.agents = [agent.model.set_weights(bestAgent.model.get_weights()) for agent in self.agents if agent is not bestAgent]
             self.plot_img(self.totalScores[bestAgent])
         bestAgent.model.save_model()
+
     def update_total_scores(self):
         for agent in self.agents:
             self.totalScores[agent].append(self.game.playerScores[agent])
 
 
     def get_best_agent(self) -> DQNAgent:
-        highestScore = [0,0]
+        highestScore = [0, 0]
         averageScore  = {agent:np.sum(self.totalScores[agent]) / 4 for agent in self.totalScores}
         for agent, score in averageScore.items():
             if score > highestScore[1]:
@@ -50,15 +50,20 @@ class Trainer:
     def reset(self):
         self.game = Game(playerIDS=self.agents)
 
-    def plot_img(self, yValues, name=random.randint(0, 50)):
-        xValues = range(1,len(yValues) + 1)
-        plt.plot(xValues, yValues)
+    def plot_img(self, yValues, name=hash(random.randint(0, 50))):
+        try:
+            print(f"{name}")
+            xValues = range(1, len(yValues) + 1)
+            plt.plot(xValues, yValues)
 
-        plt.xlabel('GameX')
-        plt.ylabel('score')
-        plt.title('hej')
-        plt.savefig('plots/line_graph.png')
-        plt.close()
+            plt.xlabel('GameX')
+            plt.ylabel('score')
+            plt.title('hej')
+            plt.savefig(f'line_graph.png')
+            plt.close()
+        except Exception as e:
+            print(e)
+
 
 def start_training(guiagent=False):
     url = app.url_for("index", _external=True)

@@ -130,6 +130,7 @@ class DQNAgent:
 
         return self.model.predict(self.preprocess_state(state))[2] > 0.5
 
+    def remember(self,state):
     def preprocess_state(self, state: dict) -> np.ndarray:
         # To Convert the state dictionary to a vector
         def one_hot_encode_suit(suit_value, num_suits):
