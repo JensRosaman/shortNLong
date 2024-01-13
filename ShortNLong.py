@@ -756,16 +756,20 @@ class Game:
                               for agent in self.declaredCards}, #{agent.agentID: str(card) for card in list for list in self.declaredCards[agent] for agent in self.declaredCards},
             "playerScores": {agent.agentID: self.players[agent].get_score() for agent in self.players},
             "guiAgents": self.guiAgents,
-            "discardDeck": [str(card) for card in self.discardDeck]
-
+            "discardDeck": [str(card) for card in self.discardDeck],
+            "layMap": {
+                    player.id: {
+                        playerToLayTo.id: {
+                            "runs": [str(card) for card in self.layMap[player][playerToLayTo]["runs"]],
+                            "sets": [str(card) for card in self.layMap[player][playerToLayTo]["sets"]]
+                        } for playerToLayTo in self.layMap[player]
+                    } for player in self.layMap
+            }
         }
-
+        """{player.id:{playerToLayTo.id: {
+        "runs": [str(card) for card in self.layMap[player][playerToLayTo]["runs"]],
+        "sets": [str(card) for card in self.layMap[player][playerToLayTo]["sets"]] for player in self.layMap
+        } for playerToLayTo in player
+        }"""
         return state
 
-
-
-
-
-
-if __name__ == "__main__":
-    pass

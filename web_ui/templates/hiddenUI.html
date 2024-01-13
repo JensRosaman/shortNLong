@@ -162,9 +162,9 @@
 
                 const declaredRuns = state["declaredCards"][playerID]["runs"];
                 const declaredSets = state["declaredCards"][playerID]["sets"];
-                const runDiv = document.createElement("div")
-                const setDiv = document.createElement("div")
-                const parent = document.createElement("div")
+                const runDiv = document.createElement("div");
+                const setDiv = document.createElement("div");
+                const parent = document.createElement("div");
 
 
                 for (let i = 0; i < declaredSets.length; i++) {
@@ -176,6 +176,7 @@
                     let img = document.createElement("img");
                     img.src = imgLinks[card];
                     img.classList.add("declaredCards");
+                    img.classList.add("set" + playerID)
                     div.appendChild(img);
                     setDiv.appendChild(div);
                 }
@@ -190,6 +191,7 @@
                     // adding the first card in the run
                     img.src = imgLinks[firstCard];
                     img.classList.add("declaredCards");
+                    img.classList.add("run" + playerID)
                     div.appendChild(img);
                     p.innerText = "➡️";
                     div.appendChild(p)
@@ -198,6 +200,7 @@
                     let img2 = document.createElement("img");
                     img2.src = imgLinks[lastCard];
                     img2.classList.add("declaredCards");
+                    img2.classList.add("run" + playerID)
 
                     div.appendChild(img2);
                     runDiv.appendChild(div);
@@ -244,7 +247,9 @@
                 if (type !== "card2Play" && type !== "layCard") {
                     const yesBtn = document.createElement("button");
                     const noBtn = document.createElement("button");
-                    
+                    if(type === "card2Play" && state["currentPlayer"] !== playerID.toString()){
+                        ptag.textContent = "Vill du ta från skräphögen?, skräphög för ja";
+                    }
                     yesBtn.textContent = "Ja";
                     noBtn.textContent = "Nej";
                     yesBtn.onclick = function () {
@@ -319,8 +324,24 @@
                     requestDiv.appendChild(submitButton);
                 }
                 else if (type === "layCard"){
+                    function onDeclaredClick(cardElem){
+                            response["response"] = "no"
+                            callback(response);
+                            ptag.remove();
+                            cardElem.onclick = function (){};
 
+                    }
+
+
+                    for (const child of declaredCards.children) {
+                        if(child.tagName === "IMG"){
+                            child.addEventListener("click", function (){
+                                onDeclaredClick(child)
+                            });
+                        }
+                    }
                 }
+
             }
 
         });
