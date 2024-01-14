@@ -379,7 +379,7 @@ class Game:
         self.turnLimit = 50
 
 
-    def start_game(self):
+    def start_game(self) -> bool:
         """Starts the gameplay loop"""
         # assing value to players list and start first round
         cardsToHandOut = 6 # cards to hand out every round
@@ -405,10 +405,9 @@ class Game:
                 l.turn = self.round
             print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
             # Gameplay loop for the different rounds
-            self._round_loop()
+            self.round_loop()
 
-
-    def _round_loop(self):
+    def round_loop(self):
         turnCounter = 0
         notStopped = True
         while notStopped:  # Stopping occurs when a player finishes their stick
@@ -669,20 +668,18 @@ class Game:
         
         return player.get_score()
     
-    def reset_game(self, startAfter:bool):
+    def reset_game(self):
 
-        for a, p in self.players:
+        for a, p in self.players.items():
             p.reset()
         self.deck = None
-        self.players = {}
-        self._playOrder = []
+        self._playOrder = list(self.players)
         self.discardDeck = []
         self.round = 0
         self.currentPlayer = None
         self.declaredCards = {}
+        self.layMap = {}
 
-
-        self.start_game()
             
     def get_current_state(self, playerId) -> dict: # taken card represents if the player has taken a card yet at the beginging of a turn
         """Collects all the current game information available to the player"""
@@ -720,7 +717,6 @@ class Game:
             "currentPlayer": self.currentPlayer,  # player
             "isCurrentPlayer": self.currentPlayer == requestingPlayer,  # bool
             "hand": requestingPlayer.hand,  # list[Card]
-            "winner": False,  # bool
             "currentScore": requestingPlayer.get_score(),  # int
             "takenCard": requestingPlayer.takenCard,  # bool
             "hasCompleteHand": requestingPlayer.__complete_hand__(),  # bool
@@ -732,7 +728,6 @@ class Game:
             "playerScore": self.calculate_points(player=requestingPlayer),
             "availableToLayTo": availableToLayTo,
             "discardValidInDeclared": False
-
         }
         if len(self.discardDeck) > 0 and len(self.declaredCards) > 0:
             state["discardValidInDeclared"] = self.card_valid_in_declared(self.discardDeck[-1])
