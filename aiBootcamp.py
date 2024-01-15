@@ -1,6 +1,5 @@
 import keras
 from ShortNLong import *
-from agents import GuiAgent, RandAgent, Mormor
 from web_ui.app import url_for, app, socketio, run_app
 from dqn_agent import DQNAgent
 from operator import itemgetter
@@ -15,7 +14,7 @@ class Trainer:
         self.game = Game(playerIDS=agents)
         self.epochs = 3
         self.totalScores = {agent: 0 for agent in self.agents}
-        pass
+
 
     def train_agents(self):
         for i in range(2):
@@ -36,27 +35,29 @@ class Trainer:
         weightsFrequence = 15 # how ooften the weights updates
         totalScores = {agent: [] for agent in self.agents}
         for i in range(weightsFrequence):
-            for i in range(games2play):
+            for j in range(games2play):
                 if self.game.round_loop():
-                    bestAgent = self.get_best_agent(totalScores=self.game.playerScores)
-
-                self.game.reset_game()
-                self.game.round = 1
+                    self.update_total_scores(table=totalScores)
+                    self.game.reset_game()
+                    self.game.round = 1
+        bestAgent = self.get_best_agent(totalScores=totalScores)
         for agent in self.agents:
             if agent.agentID == bestAgent.agentID:
                 agent.memory.append((agent.memory_buffer, 1))
             self.replay_agents(bestAgent)
-                    self.game.reset_game()
-
 
     def update_total_scores(self, table= None):
-        for agent in self.agents:
-            self.totalScores[agent].append(self.game.playerScores[agent])
+        if table is None:
+            for agent in self.agents:
+                self.totalScores[agent].append(self.game.playerScores[agent])
+        else:
+            for agent in self.agents:
+                table[agent].append(self.game.playerScores[agent])
 
 
     def get_best_agent(self, totalScores) -> DQNAgent:
         highestScore = [0, 0]
-        averageScore  = {agent:sum(totalScores[agent]) for agent in totalScores}
+        averageScore  = {agent: sum(totalScores[agent]) for agent in totalScores}
         for agent, score in averageScore.items():
             if score > highestScore[1]:
                 highestScore[1] = score
@@ -102,6 +103,6 @@ if __name__ == "__main__":
     # bob = HumanAgent(1)
     #start_training()
     trainer = Trainer()
-    trainer.train_agents()
+    trainer.train_for_round1()
 
 

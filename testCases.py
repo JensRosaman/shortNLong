@@ -1,6 +1,7 @@
 from ShortNLong import *
 from agents import GuiAgent, RandAgent, Mormor
-from web_ui.app import url_for , app , socketio, run_app
+from web_ui.app import app, run_app
+
 
 def d(lista):
     sets = {}
@@ -11,6 +12,7 @@ def d(lista):
             sets[card] = 1
 
     return lista
+
 
 def count_card_occurrences(listor):
     card_counts = {}  # Initialize an empty dictionary to store card counts
@@ -23,6 +25,7 @@ def count_card_occurrences(listor):
 
     return card_counts
 
+
 def start_game(guiagent=False):
     url = app.url_for("index",_external=True)
 
@@ -33,6 +36,8 @@ def start_game(guiagent=False):
     spel.start_game()
     score = spel.playerScores
     print(score)
+
+
 def simulate_game():
 
         bob = GuiAgent(1)
@@ -53,5 +58,3 @@ if __name__ == "__main__":
    # simulate_game()
    # bob = HumanAgent(1)
     start_game()
-
-
