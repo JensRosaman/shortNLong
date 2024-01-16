@@ -70,13 +70,13 @@ class DQNAgent:
         return model
 
     def remember_action(self, state, action):
-        self.memory.append((state, action))
+        self.memory_buffer.append((state, action))
 
     def act(self, state):
         # Epsilon-greedy policy
-        if np.random.rand() <= self.epsilon:
-            return np.random.choice(self.action_size)
-        act_values = self.model.predict(state)
+        #if np.random.rand() <= self.epsilon:
+            #return np.random.choice(self.action_size)
+        act_values = self.model.predict(state, verbose=0)
         return act_values
 
     def replay(self):
@@ -118,7 +118,7 @@ class DQNAgent:
 
     def save_memory(self, filename=None):
         if filename is None:
-            filename = f"picklejar_{self.agentID}_{datetime.now()}.pkl"
+            filename = f"picklejar/{self.agentID}_{datetime.now().strftime('%H-%M')}.pkl"
         with open(filename, 'wb') as file:
             pickle.dump(self.memory, file)
 
@@ -159,7 +159,7 @@ class DQNAgent:
         model_output = self.act(p_state)
         card2Play_output = model_output[1]
         action = np.argmax(card2Play_output)
-        self.remember(state,action,)
+        self.remember_action(state,action)
         return action
 
     def request_take_discard(self, state: dict) -> bool:

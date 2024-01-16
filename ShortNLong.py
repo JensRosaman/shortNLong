@@ -232,11 +232,11 @@ class Player:
         if not isinstance(cards_to_add, list):
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
-        print(self.hand)
+       # print(self.hand)
         self.hand = set(self.hand)
-        print(self.hand)
+       # print(self.hand)
         self.hand = list(self.hand)
-        print(self.hand)
+       # print(self.hand)
 
         self.hand = [card for card in self.hand if card is not None]
         self.__complete_hand__()
@@ -363,9 +363,9 @@ class Game:
     def __init__(self, playerIDS: list, guiActive = False, appUrl = "http://192.168.0.17:5000/", debugMode = False) -> None:
         self.numOfPlayers = len(playerIDS)
         self.playerIDs = playerIDS
-        self.deck = None
+        self.deck = Deck()
         self.players = {}
-        self._playOrder = []
+        self._playOrder = list(self.players)
         self.discardDeck = []
         self.round = 0
         self.currentPlayer = None
@@ -373,16 +373,17 @@ class Game:
         self.guiActive = guiActive
         self.appUrl = appUrl
         self.guiAgents = [agent.agentID for agent in playerIDS if "guiAgent" in agent.__dict__]
-        self.playerScores = {}
+        self.playerScores = self.playerScores = {agent: 0 for agent in self.playerIDs}
         self.layMap = {}
         self.winningPlayer = None
         self.turnLimit = 50
-
-
+        for agent in self.playerIDs:  # creating player instances
+            self.players[agent] = Player(player_id=agent, cards=[])
+        self._playOrder = list(self.players)
+        self.cardsToHandOut = 6
     def start_game(self) -> bool:
         """Starts the gameplay loop"""
         # assing value to players list and start first round
-        cardsToHandOut = 6 # cards to hand out every round
         self.layMap = {}
         # start of gameplay loop
         gameLoop = True
@@ -395,10 +396,6 @@ class Game:
             # preparing the game for the next round
             
             self._update_score_table()
-            # laying out starting cards
-            self._prepare_for_next_round(cardsToHandOut)
-            cardsToHandOut += 1
-
             # updating the turn of each of the players to update their internal logic
             self.round += 1 # next turn starting
             for k, l in self.players.items():
@@ -408,6 +405,8 @@ class Game:
             self.round_loop()
 
     def round_loop(self):
+        # laying out starting cards
+        self._prepare_for_next_round()
         turnCounter = 0
         notStopped = True
         while notStopped:  # Stopping occurs when a player finishes their stick
@@ -509,10 +508,15 @@ class Game:
                 # next round starting
 
     # ----------------------------------------------------------------------------------------------------------
-    def _prepare_for_next_round(self, cardsToHandOut):
+    def _prepare_for_next_round(self):
         self.deck = Deck()
-        self.discardDeck.append(self.deck.remove_card(top=True))
-        self._hand_out_cards(cardsToHandOut)
+        self.discardDeck = [self.deck.remove_card(top=True)]
+        self._hand_out_cards(self.round + 5)
+
+        if self.round > 1:
+            self._playOrder.append(self._playOrder.pop(0))
+            self.cardsToHandOut += 1
+
 
     def _update_score_table(self):
         # first time the table is updated aka first round
@@ -521,12 +525,6 @@ class Game:
         else:
             for agent in self.playerIDs:
                 self.playerScores[agent] += self.calculate_points(player=self.players[agent])
-        if self.round > 1:
-            self._playOrder.append(self._playOrder.pop(0))
-        else:
-            for agent in self.playerIDs:  # creating player instances
-                self.players[agent] = Player(player_id=agent, cards=[])
-            self._playOrder = list(self.players)
 
     def discard_request(self,current_player_index):
         """Requests an action from all the agents and returns the agent to pick"""
