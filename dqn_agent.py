@@ -110,6 +110,7 @@ class DQNAgent:
         # Save the model to a file
         self.model.save(file_path)
 
+
     def load_model(self, file_path):
         # Load the model from a file
         self.model = load_model(file_path)
@@ -125,6 +126,12 @@ class DQNAgent:
         with open(path, 'rb') as file:
             memory = pickle.load(file)
         return memory
+
+    def add_round_to_memory(self,win=False):
+        if win:
+            self.memory.append((self.memory_buffer,1))
+            return
+        self.memory.append((self.memory_buffer, 0))
 
     def request_declare(self, state: dict) -> bool:
         # For example, if the model predicts declaring with a probability greater than 0.5

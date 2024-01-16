@@ -3,8 +3,10 @@ from ShortNLong import *
 from web_ui.app import url_for, app, socketio, run_app
 from dqn_agent import DQNAgent
 from operator import itemgetter
+from threading import Thread
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 class Trainer:
     def __init__(self, agents=None):
@@ -38,13 +40,24 @@ class Trainer:
             for j in range(games2play):
                 if self.game.round_loop():
                     self.update_total_scores(table=totalScores)
+
+                    bestAgent = None
+                    minScore = float("inf")
+                    for a , score in self.game.playerScores.items():
+                        if score < minScore:
+                            minScore = score
+                            bestAgent = a
+
+                    for agent in self.agents:
+                        if agent.agentID == bestAgent.agentID:
+                            agent.add_round_to_memory(True)
+                            continue
+                        agent.add_round_to_memory(False)
+
                     self.game.reset_game()
                     self.game.round = 1
-        bestAgent = self.get_best_agent(totalScores=totalScores)
-        for agent in self.agents:
-            if agent.agentID == bestAgent.agentID:
-                agent.memory.append((agent.memory_buffer, 1))
-            self.replay_agents(bestAgent)
+            bestAgent = self.get_best_agent(totalScores=totalScores)
+            self.replay_agents()
 
     def update_total_scores(self, table= None):
         if table is None:
@@ -56,19 +69,20 @@ class Trainer:
 
 
     def get_best_agent(self, totalScores) -> DQNAgent:
-        highestScore = [0, 0]
+        lowestScore = [None, float("inf")]
         averageScore  = {agent: sum(totalScores[agent]) for agent in totalScores}
         for agent, score in averageScore.items():
-            if score > highestScore[1]:
-                highestScore[1] = score
-                highestScore[0] = agent
-        return max(averageScore.items(), key=lambda x: x[1])[0]
+            if score < lowestScore[1]:
+                lowestScore[1] = score
+                lowestScore[0] = agent
+        return lowestScore[0]
 
     def reward_agents(self):
         pass
 
-    def replay_agents(self,bestAgent):
-
+    def replay_agents(self):
+        for agent in self.agents:
+            agent.replay()
     def reset(self):
         self.game = Game(playerIDS=self.agents)
 

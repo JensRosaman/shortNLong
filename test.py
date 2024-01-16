@@ -1,7 +1,3 @@
 
-def print(txt):
-    pass
-def f():
-    print("hej")
-
+print(sum([1]))
 
