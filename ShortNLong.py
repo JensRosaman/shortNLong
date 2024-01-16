@@ -7,10 +7,7 @@ import json
 from Card import Card
 debug = False
 
-def print(txt):
-    if not debug:
-        pass
-    builtins.print(txt)
+
 class Deck:
     """Represents the deck on the table  """
     def __init__(self) -> None:
@@ -232,11 +229,8 @@ class Player:
         if not isinstance(cards_to_add, list):
             cards_to_add = [cards_to_add]
         self.hand += cards_to_add
-       # print(self.hand)
         self.hand = set(self.hand)
-       # print(self.hand)
         self.hand = list(self.hand)
-       # print(self.hand)
 
         self.hand = [card for card in self.hand if card is not None]
         self.__complete_hand__()
@@ -291,7 +285,6 @@ class Player:
                 self.declared["sets"].append(sets[i])
                 for card in sets[i]:
                     self.remove_id(cardToRemove=card)
-        print(f"player {self.id} declares with {self.declared}")
         return self.declared
 
     def valid_in_declared_run(self,card:Card) -> bool:
@@ -337,13 +330,13 @@ class Player:
 
         raise Exception("lay card was called but there were no playes to lay to")
 
-
-
-
-
-
-
-
+    def reset(self):
+        self.hand = []
+        self.complete_hand = False
+        self.round = 0
+        self.set_count = 0
+        self.run_count = 0
+        self.turn = False
     def start_new_round(self, round, cards):
         """Starts a new round by reseting all values"""
         self.hand = cards
@@ -388,27 +381,24 @@ class Game:
         # start of gameplay loop
         gameLoop = True
         while gameLoop:
-
             if self.round >= 4:
-                print("Game over!")
                 return True
-
-            # preparing the game for the next round
-            
-            self._update_score_table()
             # updating the turn of each of the players to update their internal logic
             self.round += 1 # next turn starting
-            for k, l in self.players.items():
-                l.turn = self.round
-            print(f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
             # Gameplay loop for the different rounds
             self.round_loop()
 
     def round_loop(self):
         # laying out starting cards
+        for k, l in self.players.items():
+            l.round = self.round
+        self._update_score_table()
         self._prepare_for_next_round()
         turnCounter = 0
         notStopped = True
+        print(
+            f"Round started, current laying card is {str(self.discardDeck[-1])}. Gameplay order is {self._playOrder} \n")
+
         while notStopped:  # Stopping occurs when a player finishes their stick
             if turnCounter > self.turnLimit:
                 return True
@@ -416,7 +406,6 @@ class Game:
             turnCounter += 1
 
             for agentOfCurrentPlayer in self._playOrder:  # I am the agent obj of the current player mainloop
-                print(f"turn {turnCounter} starting, current player is {agentOfCurrentPlayer.agentID}")
                 self.currentPlayer = self.players[
                     agentOfCurrentPlayer]  # indexs players after the id - gives the player object of the current player
                 self.currentPlayer.turn = True
@@ -427,13 +416,11 @@ class Game:
                     self.send_state()
 
                     if len(self.discardDeck) <= 0:
-                        print(f"Discard is {self.discardDeck}, ending discard loop")
                         break  # cant take from empty deck
 
                     agentToPick = self.discard_request(
                         current_player_index=self._playOrder.index(agentOfCurrentPlayer))
                     if agentToPick is None:
-                        print("no one picks")
                         break
 
                     elif agentOfCurrentPlayer == agentToPick:
@@ -447,7 +434,6 @@ class Game:
                     else:
                         # hands cards to the penalized player
                         self._take_discard(playerToPenalize=self.players[agentToPick])
-                    print(f"agent {agentToPick.agentID} picks from discard")
                 # end of discard loop
                 self._check_deck()
                 # start of the turn of the current player - starts when picking up a card
@@ -467,7 +453,6 @@ class Game:
                     if agentOfCurrentPlayer.request_declare(stateOfPlayer):
                         self.currentPlayer.declare_hand()
                         self.declaredCards[agentOfCurrentPlayer] = self.currentPlayer.declared
-                        print(f"{agentOfCurrentPlayer} deklarerar")
                         self.send_state()
 
                 elif (len(self.declaredCards) > 1) and (len(self.currentPlayer.declared["runs"]) > 0 or len(
@@ -476,9 +461,7 @@ class Game:
                     while len(list(availableLays)) > 0:
                         stateOfPlayer = self.get_current_state(
                             agentOfCurrentPlayer)  # updates the current state for the current player
-                        print(availableLays)
                         layChoice = agentOfCurrentPlayer.request_lay_cards(stateOfPlayer)  # (agentID
-                        print(f"laychoice for {agentOfCurrentPlayer.agentID}  is ", layChoice)
                         self.lay_cards(
                             agentToLayTo=layChoice["agentToLayTo"], cardToLay=layChoice["cardToLay"],
                             layToRun=layChoice["layToRun"], playerLaying=self.currentPlayer
@@ -486,7 +469,6 @@ class Game:
                         availableLays = self.can_lay_card_to_player(self.currentPlayer)
                         self.send_state()
                 # else:
-                # print(f'complete {self.currentPlayer.__complete_hand__()} , shit in declared: {len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0}')
                 # request what card to play n play it
                 if (len(self.currentPlayer.declared["runs"]) > 0 or len(self.currentPlayer.declared["sets"]) > 0
                     and len(self.currentPlayer.hand) <= 1
@@ -517,19 +499,14 @@ class Game:
             self._playOrder.append(self._playOrder.pop(0))
             self.cardsToHandOut += 1
 
-
     def _update_score_table(self):
         # first time the table is updated aka first round
-        if len(self.playerScores) == 0:
-            self.playerScores = {agent: 0 for agent in self.playerIDs}
-        else:
-            for agent in self.playerIDs:
-                self.playerScores[agent] += self.calculate_points(player=self.players[agent])
+        for agent in self.playerIDs:
+            self.playerScores[agent] += self.calculate_points(player=self.players[agent])
 
     def discard_request(self,current_player_index):
         """Requests an action from all the agents and returns the agent to pick"""
         askingOrder = self._playOrder[current_player_index:] + self._playOrder[:current_player_index]
-        print(askingOrder)
         for agent in askingOrder:
             state = self.get_current_state(playerId=agent)
 
@@ -571,7 +548,6 @@ class Game:
         Gives the player object a penalty card
             positionInStack - the index of the wanted card, 
         """
-        print(playerToPenalize)
 
         penaltyCard = self.deck.remove_card(top=True)
         playerToPenalize.add_card(penaltyCard) # tar översta kortet från högern och lägger till i handen

@@ -1,6 +1,10 @@
+import threading
+import time
+
 from ShortNLong import *
-from agents import GuiAgent, RandAgent, Mormor
+from agents import GuiAgent, RandAgent, RuleBased
 from web_ui.app import app, run_app
+from dqn_agent import DQNAgent
 
 
 def d(lista):
@@ -27,11 +31,13 @@ def count_card_occurrences(listor):
 
 
 def start_game(guiagent=False):
+
     url = app.url_for("index",_external=True)
 
                #GuiAgent(agentID=i,apiUrl=url)
 
-    spelare = [Mormor(1),Mormor(2),Mormor(3),GuiAgent(agentID=4, apiUrl=url), GuiAgent(agentID=5, apiUrl=url)]
+    #spelare = [RuleBased(1),RuleBased(2),RuleBased(3),GuiAgent(agentID=4, apiUrl=url), GuiAgent(agentID=5, apiUrl=url)]
+    spelare = [DQNAgent(1),DQNAgent(2),DQNAgent(3),DQNAgent(4),DQNAgent(5)]
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
     score = spel.playerScores

@@ -124,8 +124,8 @@ class DQNAgent:
 
     def load_memory(self,path):
         with open(path, 'rb') as file:
-            memory = pickle.load(file)
-        return memory
+            self.memory = pickle.load(file)
+
 
     def add_round_to_memory(self,win=False):
         if win:
@@ -135,13 +135,12 @@ class DQNAgent:
 
     def request_declare(self, state: dict) -> bool:
         # For example, if the model predicts declaring with a probability greater than 0.5
-        return self.model.predict(self.preprocess_state(state))[0][0] > 0.5
+        return True #self.model.predict(self.preprocess_state(state))[0][0] > 0.5
 
     def request_lay_cards(self,state) -> dict[str, bool | Any] | dict[str, bool | Any]:
         """Requests an action asking what player to lay a card to"""
         availableToLayTo = state["availableToLayTo"]
         chosenAgent = random.choice(list(availableToLayTo))
-        print(state["completeSets"])
         if len(availableToLayTo[chosenAgent]["runs"]) > 0:  # if run is available lay there
             layToRun = True
         else:
@@ -297,8 +296,6 @@ class DQNAgent:
             np.array([int(discard_valid_in_declared)])
         ), axis=None)
         reshapedVector = np.reshape(state_vector, (1,-1 )) # 4412
-        print(reshapedVector)
-        print(np.shape(reshapedVector))
         return reshapedVector.astype("float64")
 
 

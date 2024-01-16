@@ -106,8 +106,8 @@ class GuiAgent:
 
     def request_declare(self, state: dict) -> bool:
         """Returns bool if the agent wants to declare their cards"""
-        response = self._return_bool(self.post_request(data={"agentID": self.agentID, "request":"declare"}))
-        return response
+        #response = self._return_bool(self.post_request(data={"agentID": self.agentID, "request":"declare"}))
+        return True
 
     def request_card2Play(self, state: dict) -> int:
         """Asks for the index of the card to play -> index int of played card
@@ -177,7 +177,7 @@ class RandAgent:
         return {"layToRun": layToRun, "agentToLayTo": chosenAgent, "cardToLay": availableToLayTo[chosenAgent]["sets"][0]}
 
 
-class Mormor:
+class RuleBased:
     """ serves as the template to create other agent classes of"""
     def __init__(self, agentID: int) -> None:
         self.agentID = agentID

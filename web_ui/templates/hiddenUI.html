@@ -247,7 +247,7 @@
                 if (type !== "card2Play" && type !== "layCard") {
                     const yesBtn = document.createElement("button");
                     const noBtn = document.createElement("button");
-                    if(type === "card2Play" && state["currentPlayer"] !== playerID.toString()){
+                    if(type === "take_discard" && state["currentPlayer"] !== playerID.toString()){
                         ptag.textContent = "Vill du ta från skräphögen?, skräphög för ja";
                     }
                     yesBtn.textContent = "Ja";
@@ -296,8 +296,6 @@
                         let cardName = inverseImgLinks[element.src]
                         response["response"] = state["playerHands"][playerID].indexOf(cardName)
                         callback(response)
-                        submitButton.remove();
-                        inputBox.remove();
                         ptag.remove();
                     }
                     for (const child of hand.children) {
@@ -305,23 +303,6 @@
                             onCardClick(child)
                         });
                     }
-                    // old shit
-                    let inputBox = document.createElement("input")
-                    inputBox.type = "text";
-                    let submitButton = document.createElement("button");
-                    submitButton.textContent = "submit";
-                    submitButton.onclick = function () {
-                        response["response"] = inputBox.value;
-                        if (parseInt(inputBox.value) > state["playerHands"][id].length){
-                            return
-                        }
-                        callback(response)
-                        submitButton.remove();
-                        inputBox.remove();
-                        ptag.remove();
-                    }
-                    requestDiv.appendChild(inputBox);
-                    requestDiv.appendChild(submitButton);
                 }
                 else if (type === "layCard"){
                     function onDeclaredClick(cardElem){
@@ -350,7 +331,9 @@
 </head>
 <body>
     <header>
+        <div id="requests">
 
+        </div>
         <span id="round"></span>
         <span id="winConditions">10</span>
     </header>
@@ -374,9 +357,7 @@
         </div>
     </div>
     </div> <!-- parent !-->
-    <div id="requests">
 
-    </div>
 
 </body>
 </html>

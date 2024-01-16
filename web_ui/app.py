@@ -68,7 +68,7 @@ def ui_agent_response(ans):
 @socketio.on("test")
 def test(data):
     print(data)
-    print(f"url for hidden is {'http://localhost:5000' + url_for('hidden_ui', agentID=1)}")
+    print(f"url for hidden is {app.config['SERVER_NAME'] + url_for('hidden_ui', agentID=1)}")
 
 
 def run_app():

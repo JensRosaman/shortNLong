@@ -21,11 +21,7 @@ header {
     margin-right: 10px;
     margin-left: auto;
         }
-#deckImg{
-    width: 250px ;
-    height: 350px;
 
-}
 #parent{
     display: flex;
     flex-direction: row;

@@ -4,6 +4,6 @@ print()
 from datetime import datetime
 
 # Get current time
-current_time = datetime.now().strftime('%H-%M')
+current_time = {}
 
-print("Current time in HR-Min format:", current_time)
+print(current_time)
