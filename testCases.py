@@ -37,7 +37,7 @@ def start_game(guiagent=False):
                #GuiAgent(agentID=i,apiUrl=url)
 
     #spelare = [RuleBased(1),RuleBased(2),RuleBased(3),GuiAgent(agentID=4, apiUrl=url), GuiAgent(agentID=5, apiUrl=url)]
-    spelare = [DQNAgent(1),DQNAgent(2),DQNAgent(3),DQNAgent(4),DQNAgent(5)]
+    spelare = [DQNAgent(1),DQNAgent(2),DQNAgent(3),DQNAgent(4),GuiAgent(5)]
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
     score = spel.playerScores

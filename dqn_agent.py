@@ -158,14 +158,17 @@ class DQNAgent:
         model_output = self.act(p_state)
         card2Play_output = model_output[1]
         action = np.argmax(card2Play_output)
-        self.remember_action(state,action)
+        self.remember_action(p_state,action)
         return action
 
     def request_take_discard(self, state: dict) -> bool:
         # Implement your logic for taking a discard using DQN
         # For example, if the model predicts taking the discard with a probability greater than 0.5
+        pState = self.preprocess_state(state=state)
+        action = self.model.predict(pState)[2]
+        self.remember_action(pState,action)
 
-        return self.model.predict(self.preprocess_state(state))[2] > 0.5
+        return action > 0.5
 
 
     def preprocess_state(self, state: dict) -> np.ndarray:

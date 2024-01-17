@@ -19,7 +19,6 @@ class Trainer:
         self.epochs = 3
         self.totalScores = {agent: 0 for agent in self.agents}
 
-
     def train_agents(self):
         for i in range(2):
             totalScores = {agent: [] for agent in self.agents}
