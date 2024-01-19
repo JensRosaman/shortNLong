@@ -9,7 +9,8 @@ os.environ['KERAS_BACKEND'] = 'tensorflow'
 from keras import Input, Model
 from keras.layers import Dense , Masking, Activation
 from keras.optimizers import Adam
-from keras.models import Sequential, load_model
+from keras.models import load_model , save_model
+
 from datetime import datetime
 
 class DQNAgent:
@@ -31,8 +32,8 @@ class DQNAgent:
 
 
         # Build the Q-network
-        if False:#os.path.exists(fr"saved_models/{self.agentID}") and not buildNew:
-            self.load_model(fr"saved_models/{self.agentID}")
+        if os.path.exists(fr"saved_models/model.keras") and not buildNew:
+            self.load_model(fr"saved_models/model.keras")
         else:
             self.model = self.build_model()
            # self.save_model()
@@ -106,14 +107,14 @@ class DQNAgent:
 
     def save_model(self, file_path=None):
         if file_path is None:
-            file_path = fr"saved_models/{self.agentID}.keras"# {datetime.now()}"
+            file_path = fr"saved_models/model.keras"# {datetime.now()}"
         # Save the model to a file
-        self.model.save(file_path)
+        save_model(model=self.model, filepath=file_path)
 
 
     def load_model(self, file_path):
         # Load the model from a file
-        self.model = load_model(file_path)
+        self.model = load_model(filepath=file_path)
 
 
     def save_memory(self, filename=None):

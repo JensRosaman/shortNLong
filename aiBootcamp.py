@@ -34,8 +34,8 @@ class Trainer:
         bestAgent.model.save_model()
 
     def train_for_round1(self):
-        games2play = 2
-        weightsFrequence = 1 # how ooften the fit function is run updates
+        games2play = 5
+        weightsFrequence = 5 # how ooften the fit function is run updates
         bestAgent = self.agents[0]
         totalScores = {agent: [] for agent in self.agents}
         for i in range(weightsFrequence):
@@ -64,7 +64,6 @@ class Trainer:
             self.replay_agents()
             self.plot_img(totalScores[bestAgent])
         bestAgent.save_model()
-        self.save_agents()
 
     def update_total_scores(self, table= None):
         if table is None:
