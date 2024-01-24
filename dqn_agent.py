@@ -30,13 +30,14 @@ class DQNAgent:
         self.inputSize = 14968 #14786#9683 #9682 #9206 #5942 # 5942#4412 #5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + 290 + 1 + 1 # 223
 
 
-
+        if os.path.exists("picklejar/memory.pkl"):
+            self.load_memory("picklejar/memory.pkl")
         # Build the Q-network
         if os.path.exists(fr"saved_models/model.keras") and not buildNew:
             self.load_model(fr"saved_models/model.keras")
         else:
             self.model = self.build_model()
-           # self.save_model()
+            self.save_model()
 
     def __hash__(self) -> int:
         return self.agentID
@@ -84,7 +85,7 @@ class DQNAgent:
         batch_size = 1
         # Experience replay
         for trajectory in self.memory:
-            (state, action), other_actions, final_reward = trajectory
+            (state, action), final_reward = trajectory
 
             # Create the training data
             states = [state] + [s for (s, _) in other_actions]
@@ -108,6 +109,8 @@ class DQNAgent:
     def save_model(self, file_path=None):
         if file_path is None:
             file_path = fr"saved_models/model.keras"# {datetime.now()}"
+        if os.path.exists(file_path):
+            os.remove(file_path)
         # Save the model to a file
         save_model(model=self.model, filepath=file_path)
 

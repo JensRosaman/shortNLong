@@ -34,8 +34,8 @@ class Trainer:
         bestAgent.model.save_model()
 
     def train_for_round1(self):
-        games2play = 5
-        weightsFrequence = 5 # how ooften the fit function is run updates
+        games2play = 2
+        weightsFrequence = 1 # how ooften the fit function is run updates
         bestAgent = self.agents[0]
         totalScores = {agent: [] for agent in self.agents}
         for i in range(weightsFrequence):
@@ -56,6 +56,7 @@ class Trainer:
                         agent.add_round_to_memory(True)
                         continue
                     agent.add_round_to_memory(False)
+                self.game._update_score_table()
                 print(self.game.playerScores)
                 self.game.reset_game()
             for agent in self.agents:

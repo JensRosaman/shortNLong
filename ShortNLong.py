@@ -381,6 +381,7 @@ class Game:
         # start of gameplay loop
         gameLoop = True
         while gameLoop:
+            self._update_score_table()
             if self.round >= 4:
                 return True
             # updating the turn of each of the players to update their internal logic
@@ -392,7 +393,6 @@ class Game:
         # laying out starting cards
         for k, l in self.players.items():
             l.round = self.round
-        self._update_score_table()
         self._prepare_for_next_round()
         turnCounter = 0
         notStopped = True

@@ -1,6 +1,13 @@
 body{
     background-color: dimgrey;
 }
+html {
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+}
+
 header {
     display: flex;
     align-items: center;
@@ -36,9 +43,9 @@ header {
     width: 35vw;
 }
 
-#deckDaddy > img{
-    width: 40%;
-    height: 90%;
+.table-cards{
+    width: 31%;
+    height: 44%;
     margin: 5%;
 }
 
@@ -55,7 +62,9 @@ header {
 #hand{
     width: 25vw;
     height: 25vw;
-    background-image:url("https://pngimg.com/d/hands_PNG98525.png");
+    background-color: mediumaquamarine;
+    border-radius: 10%;
+    /**url("https://pngimg.com/d/hands_PNG98525.png");**/
     background-size: cover;
 }
 

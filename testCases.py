@@ -31,36 +31,12 @@ def count_card_occurrences(listor):
 
 
 def start_game(guiagent=False):
-
     url = app.url_for("index",_external=True)
-
-               #GuiAgent(agentID=i,apiUrl=url)
-
-    #spelare = [RuleBased(1),RuleBased(2),RuleBased(3),GuiAgent(agentID=4, apiUrl=url), GuiAgent(agentID=5, apiUrl=url)]
-    spelare = [DQNAgent(1),DQNAgent(2),DQNAgent(3),DQNAgent(4),GuiAgent(5)]
+    spelare = [RuleBased(1),RuleBased(2),RuleBased(3),GuiAgent(agentID=4, apiUrl=url), GuiAgent(agentID=5, apiUrl=url)]
+    #spelare = [GuiAgent(1),DQNAgent(2),DQNAgent(3),DQNAgent(4),GuiAgent(5)]
     spel = Game(playerIDS=spelare, guiActive=True, appUrl=url)
     spel.start_game()
     score = spel.playerScores
     print(score)
-
-
-def simulate_game():
-
-        bob = GuiAgent(1)
-        spel = Game([bob], guiActive=True) #spelareObj.__run_of_four__()
-        spel.deck = Deck()
-        spel._hand_out_cards(10)
-        spel.send_state()
-        #spelareObj = spel.players[bob]
-        #trissar = spelareObj.__3_of_a_kind__()
-        #print(trissar)
-        #spelareObj.round = 2
-        #h = spelareObj.hand
-        #print(trissar)
-
-
 if __name__ == "__main__":
-   # start_game()
-   # simulate_game()
-   # bob = HumanAgent(1)
     start_game()
