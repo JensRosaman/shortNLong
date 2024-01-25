@@ -13,13 +13,13 @@ class Deck:
     def __init__(self) -> None:
 
         # creates the deck where each item is a card object
-        self._create_deck_()  # declares self.deck
+        self.deck = self._create_deck_()  # declares self.deck
         self.completeDeck = self.deck  # saves for later
         # creates played card deck and plays a starting card
         self.init_new_round()
 
 
-    def _create_deck_(self) -> None:
+    def _create_deck_(self) -> list:
         """Creates a deck and shuffles"""
         suits = 'HCDS'
         ranks = 'A23456789TJQK'
@@ -27,10 +27,11 @@ class Deck:
         all_cards = [''.join(card) for card in itertools.product(suits, ranks)]
         
         # Duplicate the cards and store them in the deck
-        self.deck = [Card(code) for code in all_cards * 2]
+        deck = [Card(code) for code in all_cards * 2]
 
         # Shuffle the deck
-        random.shuffle(self.deck)
+        random.shuffle(deck)
+        return deck
 
     def remove_card(self, cardsToRemove:list = None, top=False) -> Card:
         """

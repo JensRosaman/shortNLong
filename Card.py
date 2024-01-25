@@ -1,6 +1,5 @@
 class Card:
     """Represents a single card"""
-
     @property
     def val(self):
         return self._point_value

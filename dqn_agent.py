@@ -3,23 +3,19 @@ from typing import Dict, Any
 import numpy as np
 import random
 import os
-from keras import Input, Model
+from datetime import datetime
 
+# keras imports
 os.environ['KERAS_BACKEND'] = 'tensorflow'
 from keras import Input, Model
 from keras.layers import Dense , Masking, Activation
 from keras.optimizers import Adam
 from keras.models import load_model , save_model
 
-from datetime import datetime
-
 class DQNAgent:
     def __init__(self, agentID: int, buildNew = False, max_size = 1_000_000) -> None:
         self.agentID = agentID
-
-
         # Define DQN parameters
-        self.action_size = 2  # Define the size of the action space
         self.memory = []  # Use this to store experiences for experience replay
         self.memory_buffer = [] # stores the actions taken in a round before the reward is known
         self.gamma = 0.95  # Discount factor
@@ -51,7 +47,6 @@ class DQNAgent:
         return False
 
     def build_model(self):
-
         input_layer = Input(shape=(self.inputSize,))
         masked_layer = Masking(mask_value=-1)(input_layer)
 
@@ -75,9 +70,6 @@ class DQNAgent:
         self.memory_buffer.append((state, action))
 
     def act(self, state):
-        # Epsilon-greedy policy
-        #if np.random.rand() <= self.epsilon:
-            #return np.random.choice(self.action_size)
         act_values = self.model.predict(state, verbose=0)
         return act_values
 
@@ -266,21 +258,7 @@ class DQNAgent:
         for lst in complete_sets:
             while len(lst) < 9:
                 lst.append(card_to_numerical(None))
-
-        """print(f"Shape of numerical_discard: {np.concatenate(numerical_discard).shape}")
-        print(f"Shape of numerical_hand: {np.concatenate(numerical_hand).shape}")
-        print(f"Shape of current_score: {np.array([current_score]).shape}")
-        print(f"Shape of taken_card: {np.array([taken_card]).shape}")
-        print(f"Shape of has_complete_hand: {np.array([int(has_complete_hand)]).shape}")
-        print(f"Shape of complete_sets: {np.array(complete_sets).shape}")
-        print(f"Shape of complete_runs: {np.array(complete_runs).shape}")
-        print(f"Shape of declared_cards_arr: {np.array(declared_cards_arr).shape}")
-        print(f"Shape of player_score: {np.array([player_score]).shape}")
-        print(f"Shape of discard_valid_in_declared: {np.array([int(discard_valid_in_declared)]).shape}")"""
         ### CHANGE THE LOGIC FOR AVAILIBLETOLAY TO, AI IS NOW LOBOTOMIZED
-        #available_to_lay_to = state["availableToLayTo"]
-        # value size is
-        # 5 + 1 + 20 + 1 + 1 + 1 + 1 + 1 + (13*2) + (8*3) + (5*28) + 1 + 1
         state_vector = np.concatenate((
             round_number,
             np.concatenate(numerical_discard), # 140
