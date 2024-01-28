@@ -96,7 +96,7 @@
             const inverseImgLinks = {};
 
             for (const [cardName, imgUrl] of Object.entries(imgLinks)) {
-              inverseImgLinks["http://localhost:5000" + imgUrl] = cardName;
+              inverseImgLinks[window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + imgUrl] = cardName;
             }
 
 
@@ -110,7 +110,7 @@
             function updateUI() {
                 // Updates the game ui with the info from the state
                 // updating the round counter
-                round.innerText = "Runda: " + state["round"].toString()
+                round.innerText = "Runda " + state["round"].toString()
                 if (state["currentPlayer"] === playerID){
                     document.querySelector("header").style.backgroundColor = "red";
                 }
@@ -125,7 +125,10 @@
                 //update discard
                 if (state["discardDeck"].length > 0) {
                     discardElement.setAttribute("src", imgLinks[state["discardDeck"][state["discardDeck"].length - 1]]);
-                    discardElement.style.opacity = "1"
+                    discardElement.style.opacity = "1";
+                    discardElement.classList.add("table-cards")
+                    discardElement.style.width = deckElement.style.width;
+                    discardElement.style.height = deckElement.style.height;
                 }
                 else {discardElement.style.opacity = "0.1"};
 
@@ -176,7 +179,8 @@
                     let img = document.createElement("img");
                     img.src = imgLinks[card];
                     img.classList.add("declaredCards");
-                    img.classList.add("set" + playerID)
+                    img.classList.add("set")
+                    img.setAttribute("data-playerID", playerID)
                     div.appendChild(img);
                     setDiv.appendChild(div);
                 }
@@ -191,7 +195,8 @@
                     // adding the first card in the run
                     img.src = imgLinks[firstCard];
                     img.classList.add("declaredCards");
-                    img.classList.add("run" + playerID)
+                    img.classList.add("run")
+                    img.setAttribute("data-playerID", playerID)
                     div.appendChild(img);
                     p.innerText = "➡️";
                     div.appendChild(p)
@@ -304,33 +309,44 @@
                         });
                     }
                 }
-                else if (type === "layCard"){
+                else if (type === "lay_cards"){
                     function onDeclaredClick(cardElem){
-                            response["response"] = "no"
-                            callback(response);
-                            ptag.remove();
-                            cardElem.onclick = function (){};
+                        response["response"] = {"layToRun": false, "agentToLayTo": cardElem.getAttribute("data-playerID"),
+                                                "cardToLay": null }
+                        if(cardElem.classList.contains("runs")){
+                            response["response"]["layToRun"] = true
+                        }
+
+                        if(response["response"]["layToRun"]){
+                          response["response"]["cardToLay"] = state["layMap"][playerID][cardElem.getAttribute("data-playerID")]["runs"][0]
+                        }
+                        else {
+                            response["response"]["cardToLay"] = state["layMap"][playerID][cardElem.getAttribute("data-playerID")]["sets"][0]
+                        }
+                        callback(response);
+                        ptag.remove();
+                        cardElem.onclick = function(){};
 
                     }
 
 
                     for (const child of declaredCards.children) {
-                        if(child.tagName === "IMG"){
+                        if(child.tagName === "IMG" &&
+                            (inverseImgLinks[child.src] in state["layMap"][playerID]["runs"] ||  inverseImgLinks[child.src] in state["layMap"][playerID]["sets"])){
                             child.addEventListener("click", function (){
                                 onDeclaredClick(child)
                             });
                         }
                     }
                 }
-
             }
 
         });
-
     </script>
 </head>
 <body>
     <header>
+
         <div id="requests">
 
         </div>

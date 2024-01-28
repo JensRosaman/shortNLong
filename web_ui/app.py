@@ -2,14 +2,34 @@ from flask import Flask, render_template, jsonify, request, session, url_for
 from flask_socketio import SocketIO
 import threading
 import secrets
-
+import subprocess
+import socket
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 socketio = SocketIO(app)
 app.static_folder = 'static'
 #app.config['SERVER_NAME'] = 'localhost:5000'
-app.config['SERVER_NAME'] = '127.0.0.1:5000'
+def get_ipv4_address():
+    try:
+        result = subprocess.run(["ipconfig"], capture_output=True, text=True)
+        output = result.stdout
 
+        # Parse the output to extract the IPv4 address
+        for line in output.split("\n"):
+            if "IPv4 Address" in line:  # Adjust this condition as needed
+                ipv4_address = line.split(":")[-1].strip()
+                return ipv4_address
+
+        # If IPv4 address not found in output
+        return None
+    except Exception as e:
+        print("Error occurred while getting local IPv4 address:", e)
+        return None
+
+
+app.config['SERVER_NAME'] =  get_ipv4_address() + ':5000'
+
+stateData = None
 
 @app.route('/')
 def index():
@@ -20,11 +40,13 @@ def hidden_ui(agentID):
     return render_template("hiddenUI.html", agentID=agentID)
 @app.route("/game_state", methods = ["POST","GET"] )
 def post_game_state():
+    global stateData
     if request.method == "POST":
         data = request.json
         print(f"Sending the game state to the frontend:")
 
         session["data"] = data
+        stateData = data
         socketio.emit("game_state", data)
         return {'status': 'success', 'message': 'POST request successful', 'data': data}
     elif request.method == "GET":
@@ -66,14 +88,17 @@ def ui_agent_response(ans):
 
 
 @socketio.on("test")
-def test(data):
+def onConnection(data):
+    socketio.emit("game_state", stateData)
     print(data)
-    print(f"url for hidden is {app.config['SERVER_NAME'] + url_for('hidden_ui', agentID=1)}")
+    print(f"url for hidden is {get_ipv4_address() + url_for('hidden_ui', agentID=1)}")
 
 
 def run_app():
     # , host="localhost"
-    socketio.run(app=app, debug=True, allow_unsafe_werkzeug=True)
+    socketio.run(app=app, debug=True, host="0.0.0.0", allow_unsafe_werkzeug=True)
+
+
 
 # 192.168.0.17
 

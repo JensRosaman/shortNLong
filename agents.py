@@ -120,10 +120,12 @@ class GuiAgent:
         response = self._return_bool(self.post_request(data={"agentID":self.agentID, "request":"take_discard"}))
         return response
 
-    def request_lay_cards(self):
+    def request_lay_cards(self,state):
         """Requests an action asking what player to lay a card to"""
-        response = self._return_int(self.post_request(data={"agentID":self.agentID, "request":"lay_cards"}))
-
+        response = self.post_request(data={"agentID":self.agentID, "request":"lay_cards"})
+        for card in state["hand"]:
+            if response["cardToLay"] == str(card):
+                response["cardToLay"] = card
         return response
     def post_request(self, data):
         print(f"{self.agentID}: sending a request to the front end {data}")

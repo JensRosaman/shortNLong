@@ -197,7 +197,7 @@ class Player:
         self.__3_of_a_kind__()
         self.__run_of_four__()
         if self.round == 1:
-            if self.set_count >= 3:
+            if self.set_count >= 2:
                 self.complete_hand = True
                 
             else:
@@ -737,12 +737,12 @@ class Game:
             "guiAgents": self.guiAgents,
             "discardDeck": [str(card) for card in self.discardDeck],
             "layMap": {
-                    player.id: {
+                    agent.agentID: {
                         playerToLayTo.id: {
-                            "runs": [str(card) for card in self.layMap[player][playerToLayTo]["runs"]],
-                            "sets": [str(card) for card in self.layMap[player][playerToLayTo]["sets"]]
-                        } for playerToLayTo in self.layMap[player]
-                    } for player in self.layMap
+                            "runs": [str(card) for card in self.layMap[agent][playerToLayTo]["runs"]],
+                            "sets": [str(card) for card in self.layMap[agent][playerToLayTo]["sets"]]
+                        } for playerToLayTo in self.layMap[agent]
+                    } for agent in self.layMap
             }
         }
         """{player.id:{playerToLayTo.id: {
