@@ -144,6 +144,8 @@ class RandAgent:
     def __repr__(self) -> str:
         return str(self.agentID)
 
+    def __str__(self):
+        return RandAgent.__name__ + str(self.agentID)
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.agentID == other.agentID
@@ -187,6 +189,8 @@ class RuleBased:
     def __hash__(self) -> int:
         return self.agentID
 
+    def __str__(self):
+        return type(self).__name__ + str(self.agentID)
     def __repr__(self) -> str:
         return str(self.agentID)
 

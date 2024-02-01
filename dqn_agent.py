@@ -41,6 +41,8 @@ class DQNAgent:
     def __repr__(self) -> str:
         return str(self.agentID)
 
+    def __str__(self):
+        return type(self).__name__ + str(self.agentID)
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
             return self.agentID == other.agentID
@@ -66,8 +68,8 @@ class DQNAgent:
                       optimizer=Adam(learning_rate=self.learning_rate, clipnorm=1.0, clipvalue=0.5))
         return model
 
-    def remember_action(self, state, action):
-        self.memory_buffer.append((state, action))
+    def remember_action(self, state, action,request):
+        self.memory_buffer.append((state, action, request))
 
     def act(self, state):
         act_values = self.model.predict(state, verbose=0)
@@ -77,17 +79,18 @@ class DQNAgent:
         batch_size = 1
         # Experience replay
         for trajectory in self.memory:
-            (state, action), final_reward = trajectory
+            arr, final_reward = trajectory
 
             # Create the training data
-            states = [state] + [s for (s, _) in other_actions]
-            actions = [action] + [a for (_, a) in other_actions]
+            states = arr[0]
+            actions = arr[1]
+            request = arr[2]
             rewards = [final_reward] * len(states)
 
             for i in range(len(states)):
                 target = rewards[i]
                 if i < len(states) - 1:
-                    target += self.gamma * np.amax(self.model.predict(states[i + 1])[0])
+                    target += self.gamma * np.amax(self.model.predict(states[i + 1])[request])
 
                 target_f = self.model.predict(states[i])
                 target_f[0][actions[i]] = target
@@ -114,7 +117,7 @@ class DQNAgent:
 
     def save_memory(self, filename=None):
         if filename is None:
-            filename = f"picklejar/{self.agentID}_{datetime.now().strftime('%H-%M')}.pkl"
+            filename = f"picklejar/memory.pkl"
         with open(filename, 'wb') as file:
             pickle.dump(self.memory, file)
 
@@ -154,7 +157,7 @@ class DQNAgent:
         model_output = self.act(p_state)
         card2Play_output = model_output[1]
         action = np.argmax(card2Play_output)
-        self.remember_action(p_state,action)
+        self.remember_action(state=p_state,action=action, request=1)
         return action
 
     def request_take_discard(self, state: dict) -> bool:
@@ -162,7 +165,7 @@ class DQNAgent:
         # For example, if the model predicts taking the discard with a probability greater than 0.5
         pState = self.preprocess_state(state=state)
         action = self.model.predict(pState)[2]
-        self.remember_action(pState,action)
+        self.remember_action(state=pState,action= action,request=2)
 
         return action > 0.5
 

@@ -1,15 +1,14 @@
 import time
 import pickle
 print()
-
-from datetime import datetime
+from dqn_agent import *
+from aiBootcamp import *
 
 # Get current time
 with open("picklejar/1_12-25.pkl", "rb") as f:
-    current_time = pickle.load(f)
-print(current_time[0][1])
+    memory = pickle.load(f)
 
-print(current_time)
+print(memory)
 """print(f"Shape of numerical_discard: {np.concatenate(numerical_discard).shape}")
         print(f"Shape of numerical_hand: {np.concatenate(numerical_hand).shape}")
         print(f"Shape of current_score: {np.array([current_score]).shape}")

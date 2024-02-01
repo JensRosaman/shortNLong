@@ -475,8 +475,7 @@ class Game:
                     and len(self.currentPlayer.hand) <= 1
                 ) or (turnCounter > self.turnLimit):
                     if len(self.currentPlayer.hand) == 1:
-                        cardToPlay = self.currentPlayer.hand[0]
-                        self.discardDeck.append(self.currentPlayer.hand.pop(cardToPlay))
+                        self.discardDeck.append(self.currentPlayer.hand.pop(0))
                         self.send_state()
                     print(turnCounter)
                     print(f"Game ended, the winner is {self.currentPlayer}")

@@ -1,5 +1,5 @@
 import datetime
-
+import pickle
 import keras
 from ShortNLong import *
 from web_ui.app import url_for, app, socketio, run_app
@@ -20,12 +20,14 @@ class Trainer:
         self.totalScores = {agent: 0 for agent in self.agents}
 
     def train_agents(self):
+        bestAgent = self.agents[0] # base case
         for i in range(2):
             totalScores = {agent: [] for agent in self.agents}
             for j in range(self.epochs):
                 if self.game.start_game(): # game has ended
                     self.reward_agents()
                     self.update_total_scores()
+
                     # logic for training each agent for next epoch
             bestAgent = self.get_best_agent(totalScores)
             self.agents = [agent.model.set_weights(bestAgent.model.get_weights()) for agent in self.agents if agent is not bestAgent]
@@ -124,11 +126,9 @@ def start_training():
 
 
 if __name__ == "__main__":
-    # start_game()
-    # simulate_game()
-    # bob = HumanAgent(1)
     #start_training()
     trainer = Trainer()
     trainer.train_for_round1()
-
+    # Get current time
+    #trainer.replay_agents()
 
