@@ -128,7 +128,7 @@ def start_training():
 if __name__ == "__main__":
     #start_training()
     trainer = Trainer()
-    trainer.train_for_round1()
+    #trainer.train_for_round1()
     # Get current time
-    #trainer.replay_agents()
+    trainer.replay_agents()
 

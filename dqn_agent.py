@@ -16,8 +16,8 @@ class DQNAgent:
     def __init__(self, agentID: int, buildNew = False, max_size = 1_000_000) -> None:
         self.agentID = agentID
         # Define DQN parameters
-        self.memory = []  # Use this to store experiences for experience replay
-        self.memory_buffer = [] # stores the actions taken in a round before the reward is known
+        self.memory = np.array([])  # Use this to store experiences for experience replay
+        self.memory_buffer = np.array([]) # stores the actions taken in a round before the reward is known
         self.gamma = 0.95  # Discount factor
         self.epsilon = 1.0  # Exploration-exploitation trade-off
         self.epsilon_decay = 0.995  # Decay rate for epsilon
@@ -69,7 +69,7 @@ class DQNAgent:
         return model
 
     def remember_action(self, state, action,request):
-        self.memory_buffer.append((state, action, request))
+        np.append(self.memory_buffer,(state, action, request))
 
     def act(self, state):
         act_values = self.model.predict(state, verbose=0)
@@ -79,24 +79,25 @@ class DQNAgent:
         batch_size = 1
         # Experience replay
         for trajectory in self.memory:
-            arr, final_reward = trajectory
-
+            print(trajectory)
             # Create the training data
-            states = arr[0]
-            actions = arr[1]
-            request = arr[2]
-            rewards = [final_reward] * len(states)
+            states = trajectory[0]
+            rewards = [trajectory[-1]]
 
             for i in range(len(states)):
                 target = rewards[i]
+                actions = states[i][1]
+                request = trajectory[i][2]
+                current_state = np.array(states[i][0])
                 if i < len(states) - 1:
-                    target += self.gamma * np.amax(self.model.predict(states[i + 1])[request])
+                    print(current_state)
+                    target += self.gamma * np.amax(self.model.predict(states[i][0])[request])
 
                 target_f = self.model.predict(states[i])
                 target_f[0][actions[i]] = target
 
                 # Train the model
-                self.model.fit(states[i], target_f, epochs=1, verbose=0)
+                self.model.fit(np.array(states[i]), target_f, epochs=1)
 
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
@@ -122,15 +123,13 @@ class DQNAgent:
             pickle.dump(self.memory, file)
 
     def load_memory(self,path):
-        with open(path, 'rb') as file:
-            self.memory = pickle.load(file)
-
-
+        self.memory = np.load(path, allow_pickle=True)
+        
     def add_round_to_memory(self,win=False):
         if win:
-            self.memory.append((self.memory_buffer,1))
+            np.append(self.memory,np.array([self.memory_buffer,1]))
             return
-        self.memory.append((self.memory_buffer, 0))
+        np.append(self.memory,np.array([self.memory_buffer,0]))
 
     def request_declare(self, state: dict) -> bool:
         # For example, if the model predicts declaring with a probability greater than 0.5

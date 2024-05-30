@@ -41,7 +41,7 @@ def start_game(guiagent=False):
 def plot_playerScores():
     spelare = [RuleBased(1),RuleBased(2),DQNAgent(3),DQNAgent(agentID=4), DQNAgent(agentID=5)]
     totScores = {agent:0 for agent in spelare}
-    for i in range(2):
+    for i in range(5):
         spel = Game(playerIDS=spelare)
         spel.reset_game()
         spel.round = 1
